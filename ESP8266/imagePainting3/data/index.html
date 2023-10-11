@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>IMAGEPAINTING</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="css/onsenui-core.min.css">
+	<link rel="stylesheet" id="theme" href="css/onsen-css.min.css">
+	<link rel="stylesheet" href="css/imagepainting.css">
+</head>
+
+<body>
+	<ons-splitter>
+		<ons-splitter-side id="menu" side="left" width="220px" collapse swipeable>
+			<ons-page>
+				<ons-list>
+					<ons-list-item onclick="fn.load('actions.html')" tappable>
+						<div class="left" ><ons-icon icon="myActions"></ons-icon></div>
+						<div class="center" >Actions</div>
+					</ons-list-item>
+					<ons-list-item onclick="fn.load('playlist.html')" tappable>
+						<div class="left" ><ons-icon icon="myPlaylist"></ons-icon></div>
+						<div class="center" >Playlist</div>
+					</ons-list-item>
+					<ons-list-item onclick="fn.load('parameters.html')" tappable>
+						<div class="left" ><ons-icon icon="myParameters"></ons-icon></div>
+						<div class="center" >Parameters</div>
+					</ons-list-item>
+					<ons-list-item onclick="fn.load('convert.html')" tappable>
+						<div class="left" ><ons-icon icon="myUpload"></ons-icon></div>
+						<div class="center" >Convert</div>
+					</ons-list-item>
+					<ons-list-item onclick="fn.load('generate.html')" tappable>
+						<div class="left" ><ons-icon icon="myUpload"></ons-icon></div>
+						<div class="center" >Generate</div>
+					</ons-list-item>
+					<ons-list-item onclick="fn.load('system.html')" tappable>
+						<div class="left" ><ons-icon icon="mySystem"></ons-icon></div>
+						<div class="center" >System</div>
+					</ons-list-item>
+				</ons-list>
+			</ons-page>
+		</ons-splitter-side>
+		<ons-splitter-content id="content" page="actions.html"></ons-splitter-content>
+	</ons-splitter>
+
+	<template id="actions.html">
+		<ons-page id="actions">
+			<ons-toolbar>
+				<div class="left"><ons-toolbar-button onclick="fn.open()"><ons-icon icon="myMenu"></ons-icon></ons-toolbar-button></div>
+				<div class="center">Actions</div>
+				<div class="right"><ons-toolbar-button id="btnStatus"><ons-icon id="iconStatus" icon="myStatus"></ons-icon></ons-toolbar-button></div>
+			</ons-toolbar>
+			<ons-list>
+				<ons-list-header>OPTIONS</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Playlist?</div>
+					<div class="right"><ons-checkbox id="ckPlaylist"></ons-checkbox></div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Trigger?</div>
+					<div class="right"><ons-checkbox id="ckTrigger"></ons-checkbox></div>
+				</ons-list-item>
+				<ons-list-header>ACTIONS</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<div class="left" style="width: 47%;"><ons-button modifier="large" style="background-color: purple;" id="btnActionLight">Light</ons-button></div>
+					<div class="right" style="width: 47%;"><ons-button modifier="large" style="background-color: orange;" id="btnActionBurn">Burn</ons-button></div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left" style="width: 47%;"><ons-button modifier="large" style="background-color: green;" id="btnActionPlay">Play/Pause</ons-button></div>
+					<div class="right" style="width: 47%;"><ons-button modifier="large" style="background-color: red;" id="btnActionStop">Stop</ons-button></div>
+				</ons-list-item>
+			</ons-list>
+			<ons-popover cancelable direction="down" id="popoverStatus">
+				<div style="padding: 20px; text-align: center;" id="textStatus">READY</div>
+			</ons-popover>
+		</ons-page>
+	</template>
+	
+	<template id="playlist.html">
+		<ons-page id="playlist">
+			<ons-toolbar>
+				<div class="left"><ons-toolbar-button onclick="fn.open()"><ons-icon icon="myMenu"></ons-icon></ons-toolbar-button></div>
+				<div class="center">Playlist</div>
+				<div class="right"><ons-toolbar-button id="btnStatus"><ons-icon id="iconStatus" icon="myStatus"></ons-icon></ons-toolbar-button></div>
+			</ons-toolbar>
+			
+			<ons-list>
+				<ons-list-header>PLAYLIST</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<ons-select style="width: 100%;" id="selectPlaylist"><option value=""></option></ons-select>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left" style="width: 47%;"><ons-button modifier="large" id="btnPlaylistRestore">Restore</ons-button></div>
+					<div class="right" style="width: 47%;"><ons-button modifier="large" style="background-color: red;" id="btnPlaylistDelete">Delete</ons-button></div>
+				</ons-list-item>	
+				<ons-list-header>PARAMETER LIST</ons-list-header>
+				<ons-list id="onsplaylist">
+				
+				</ons-list>
+			</ons-list>
+			
+			<ons-popover cancelable direction="down" id="popoverStatus">
+				<div style="padding: 20px; text-align: center;" id="textStatus">READY</div>
+			</ons-popover>
+			<ons-bottom-toolbar>
+				<ons-row>
+					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" id="btnPlaylistSave">Save</ons-button></ons-col>
+					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" style="background-color: orange;" id="btnPlaylistDefault">Default</ons-button></ons-col>
+					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" style="background-color: red;" id="btnPlaylistFill">Fill</ons-button></ons-col>
+				</ons-row>
+			</ons-bottom-toolbar>
+		</ons-page>
+	</template>
+
+	<template id="parameters.html">
+		<ons-page id="parameters">
+			<ons-toolbar>
+				<div class="left"><ons-toolbar-button onclick="fn.open()"><ons-icon icon="myMenu"></ons-icon></ons-toolbar-button></div>
+				<div class="center">Parameters</div>
+				<div class="right"><ons-toolbar-button id="btnStatus"><ons-icon id="iconStatus" icon="myStatus"></ons-icon></ons-toolbar-button></div>
+			</ons-toolbar>
+			
+			<ons-list>
+				<ons-list-header>PARAMETER</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<ons-select style="width: 100%;" id="selectParameter"><option value=""></option></ons-select>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left" style="width: 47%;"><ons-button modifier="large" id="btnRestore">Restore</ons-button></div>
+					<div class="right" style="width: 47%;"><ons-button modifier="large" style="background-color: red;" id="btnDelete">Delete</ons-button></div>
+				</ons-list-item>				
+				<ons-list-header>BITMAP</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<ons-select style="width: 100%;" id="selectParameterBitmap"><option value=""></option></ons-select>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Start:</div>
+						<ons-range style="width: 100%;" id="sliderParameterIndexStart"></ons-range>
+					<div class="right" id="textParameterIndexStart"></div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="center">
+						<canvas style="display: block; margin-left: auto; margin-right: auto; max-width: 100%; height: 40vw;" id="canvasParameterBitmap" width="0px" height="0px"></canvas>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Stop:</div>
+						<ons-range style="width: 100%;" id="sliderParameterIndexStop"></ons-range>
+					<div class="right" id="textParameterIndexStop"></div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider" expandable>
+					BASIC
+					<div class="expandable-content">
+						<ons-list modifier="inset">
+							<ons-list-item modifier="nodivider">
+								<div class="left">Delay:</div>
+								<div class="center"><ons-range style="width: 100%;" min="0" max="255" id="sliderDelay"></ons-range></div>
+								<div class="right" id="textDelay"></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Brightness:</div>
+								<div class="center"><ons-range style="width: 100%;" min="0" max="255" id="sliderBrightness"></ons-range></div>
+								<div class="right" id="textBrightness"></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Color:</div>
+								<div class="center"><ons-input style="width: 100%;" type="color" id="pickerColor"></ons-input></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+									<div class="left">Invert?</div>
+									<div class="right"><ons-checkbox id="ckInvert"></ons-checkbox></div>
+							</ons-list-item>
+						</ons-list>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider" expandable>
+					REPEAT
+					<div class="expandable-content">
+						<ons-list modifier="inset">
+							<ons-list-item modifier="nodivider">
+								<div class="left">Repeat:</div>
+								<div class="center"><ons-range style="width: 100%;" min="0" max="25" id="sliderRepeat"></ons-range></div>
+								<div class="right" id="textRepeat"></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Repeat?</div>
+								<div class="right"><ons-checkbox id="ckRepeat"></ons-checkbox></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Bounce?</div>
+								<div class="right"><ons-checkbox id="ckBounce"></ons-checkbox></div>
+							</ons-list-item>
+						</ons-list>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider" expandable>
+					END
+					<div class="expandable-content">
+						<ons-list modifier="inset">
+							<ons-list-item modifier="nodivider">
+								<div class="left">End Off?</div>
+								<div class="right"><ons-checkbox id="ckEndOff"></ons-checkbox></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">End Color?</div>
+								<div class="right"><ons-checkbox id="ckEndColor"></ons-checkbox></div>
+							</ons-list-item>
+						</ons-list>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider" expandable>
+					VERTICAL CUT
+					<div class="expandable-content">
+						<ons-list modifier="inset">
+							<ons-list-item modifier="nodivider">
+								<div class="left">Vertical Cut:</div>
+								<div class="center"><ons-range style="width: 100%;" min="0" max="25" id="sliderVcut"></ons-range></div>
+								<div class="right" id="textVcut"></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Vertical Cut Off?</div>
+								<div class="right"><ons-checkbox id="ckVcutOff"></ons-checkbox></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Vertical Cut Color?</div>
+								<div class="right"><ons-checkbox id="ckVcutColor"></ons-checkbox></div>
+							</ons-list-item>
+						</ons-list>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider" expandable>
+					HORIZONTAL CUT
+					<div class="expandable-content">
+						<ons-list modifier="inset">
+							<ons-list-item modifier="nodivider">
+								<div class="left">Horizontal Cut:</div>
+								<div class="center"><ons-range style="width: 100%;" min="0" max="25" id="sliderHcut"></ons-range></div>
+								<div class="right" id="textHcut"></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Horizontal Cut Off?</div>
+								<div class="right"><ons-checkbox id="ckHcutOff"></ons-checkbox></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Horizontal Cut Color?</div>
+								<div class="right"><ons-checkbox id="ckHcutColor"></ons-checkbox></div>
+							</ons-list-item>
+						</ons-list>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider" expandable>
+					COUNTDOWN
+					<div class="expandable-content">
+						<ons-list modifier="inset">
+							<ons-list-item modifier="nodivider">
+								<div class="left">Countdown:</div>
+								<div class="center"><ons-range style="width: 100%;" min="0" max="15000" id="sliderCountdown"></ons-range></div>
+								<div class="right" id="textCountdown"></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Countdown?</div>
+								<div class="right"><ons-checkbox id="ckCountdown"></ons-checkbox></div>
+							</ons-list-item>
+						</ons-list>
+					</div>
+				</ons-list-item>
+			</ons-list>
+			
+			<ons-popover cancelable direction="down" id="popoverStatus">
+				<div style="padding: 20px; text-align: center;" id="textStatus">READY</div>
+			</ons-popover>
+			<ons-bottom-toolbar>
+				<ons-row>
+					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" id="btnSave">Save</ons-button></ons-col>
+					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" style="background-color: orange;" id="btnDefault">Default</ons-button></ons-col>
+					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" style="background-color: red;" id="btnAdd">Add</ons-button></ons-col>
+				</ons-row>
+			</ons-bottom-toolbar>
+		</ons-page>
+	</template>
+
+	<template id="convert.html">
+		<ons-page id="convert">
+			<ons-toolbar>
+				<div class="left"><ons-toolbar-button onclick="fn.open()"><ons-icon icon="myMenu"></ons-icon></ons-toolbar-button></div>
+				<div class="center">Convert</div>
+				<div class="right"><ons-toolbar-button id="btnStatus"><ons-icon id="iconStatus" icon="myStatus"></ons-icon></ons-toolbar-button></div>
+			</ons-toolbar>
+			
+			<ons-list>
+				<ons-list-header>FILE</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<input style="width: 100%;" type="file" id="selectConvert"></input>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<canvas style="display: block; margin-left: auto; margin-right: auto; max-width: 100%; height: 50vw;" id="canvasConvert" width="0px" height="0px"></canvas>
+				</ons-list-item>
+				<ons-list-header>OPTIONS</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Gamma:</div>
+					<div class="right">
+						<ons-select id="selectConvertGamma">
+							<option value="1.0">1.0</option>
+							<option value="1.3">1.3</option>
+							<option value="1.6">1.6</option>					
+							<option value="1.9">1.9</option>
+							<option value="2.2">2.2</option>
+							<option value="2.5" selected="selected">2.5</option>
+							<option value="2.8">2.8</option>
+							<option value="3.1">3.1</option>
+						</ons-select>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Orientation:</div>
+					<div class="right">
+						<ons-select id="selectConvertOrientation">
+							<option value="-90">-90°</option>
+							<option value="0">0°</option>
+							<option value="90" selected="selected">+90°</option>					
+							<option value="180">+180°</option>
+						</ons-select>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Pixels:</div>
+					<ons-range style="width: 100%;" id="sliderConvertPixels"></ons-range>
+					<div class="right" id="textConvertPixels"></div>
+				</ons-list-item>
+			</ons-list>
+			
+			<ons-popover cancelable direction="down" id="popoverStatus">
+				<div style="padding: 20px; text-align: center;" id="textStatus">READY</div>
+			</ons-popover>
+			<ons-bottom-toolbar>
+				<ons-row>
+					<ons-col width="50%"><ons-button modifier="large" style="background-color: orange;" id="btnConvertUpload">Upload</ons-button></ons-col>
+					<ons-col width="50%"><ons-button modifier="large" id="btnConvertDownload">Download</ons-button></ons-col>
+				</ons-row>
+			</ons-bottom-toolbar>
+		</ons-page>
+	</template>
+	
+	<template id="generate.html">
+		<ons-page id="generate">
+			<ons-toolbar>
+				<div class="left"><ons-toolbar-button onclick="fn.open()"><ons-icon icon="myMenu"></ons-icon></ons-toolbar-button></div>
+				<div class="center">Generate</div>
+				<div class="right"><ons-toolbar-button id="btnStatus"><ons-icon id="iconStatus" icon="myStatus"></ons-icon></ons-toolbar-button></div>
+			</ons-toolbar>
+			
+			<ons-list>
+				<ons-list-header>EFFECT</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<ons-select style="width: 100%;" id="selectGenerate">
+						<option value="generateCircle" selected="selected">Random Circle </option>
+						<option value="generateRainbow">Random Rainbow </option>
+				</ons-select>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<canvas style="display: block; margin-left: auto; margin-right: auto; max-width: 100%; height: 50vw;" id="canvasGenerate" width="0px" height="0px"></canvas>
+				</ons-list-item>
+				<ons-list-header>OPTIONS</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Gamma:</div>
+					<div class="right">
+						<ons-select id="selectGenerateGamma">
+							<option value="1.0">1.0</option>
+							<option value="1.3">1.3</option>
+							<option value="1.6">1.6</option>					
+							<option value="1.9">1.9</option>
+							<option value="2.2">2.2</option>
+							<option value="2.5" selected="selected">2.5</option>
+							<option value="2.8">2.8</option>
+							<option value="3.1">3.1</option>
+						</ons-select>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Orientation:</div>
+					<div class="right">
+						<ons-select id="selectGenerateOrientation">
+							<option value="-90">-90°</option>
+							<option value="0">0°</option>
+							<option value="90" selected="selected">+90°</option>					
+							<option value="180">+180°</option>
+						</ons-select>
+					</div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Pixels:</div>
+					<ons-range style="width: 100%;" id="sliderGeneratePixels"></ons-range>
+					<div class="right" id="textGeneratePixels"></div>
+				</ons-list-item>
+			</ons-list>
+
+			<ons-popover cancelable direction="down" id="popoverStatus">
+				<div style="padding: 20px; text-align: center;" id="textStatus">READY</div>
+			</ons-popover>
+			<ons-bottom-toolbar>
+				<ons-row>
+					<ons-col width="33%"><ons-button modifier="large" style="background-color: orange;" id="btnGenerateUpload">Upload</ons-button></ons-col>
+					<ons-col width="33%"><ons-button modifier="large" id="btnGenerateDownload">Download</ons-button></ons-col>
+					<ons-col width="33%"><ons-button modifier="large" style="background-color: red;" id="btnGenerateRefresh">Refresh</ons-button></ons-col>
+				</ons-row>
+			</ons-bottom-toolbar>
+		</ons-page>
+	</template>
+
+	<template id="system.html">
+		<ons-page id="system">
+			<ons-toolbar>
+				<div class="left"><ons-toolbar-button onclick="fn.open()"><ons-icon icon="myMenu"></ons-icon></ons-toolbar-button></div>
+				<div class="center">System</div>
+				<div class="right"><ons-toolbar-button id="btnStatus"><ons-icon id="iconStatus" icon="myStatus"></ons-icon></ons-toolbar-button></div>
+			</ons-toolbar>
+			<ons-list>
+				<ons-list-header>ESP8266 UPLOAD</ons-list-header>				
+				<ons-list-item modifier="nodivider">
+					<input style="width: 100%;" type="file" id="selectSystemUpload"></input>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left" style="width: 47%;"><ons-button modifier="large" style="background-color: orange;" id="btnSystemUpload">Upload</ons-button></div>
+				</ons-list-item>
+				<ons-list-header>ESP8266 PIXELS</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Pixels:</div>
+					<div class="right" id="textSystemPixels"></div>
+				</ons-list-item>
+				<ons-list-header>ESP8266 FILELIST</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<ons-select style="width: 100%;" id="selectSystem"><option value=""></option></ons-select>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left">Size:</div>
+					<div class="right" id="textSystemSize"></div>
+				</ons-list-item>
+				<ons-list-item modifier="nodivider">
+					<div class="left" style="width: 47%;"><ons-button modifier="large" id="btnSystemDownload">Download</ons-button></div>
+					<div class="right" style="width: 47%;"><ons-button modifier="large" style="background-color: red;" id="btnSystemDelete">Delete</ons-button></div>
+				</ons-list-item>
+				<ons-list-header>ESP8266 FILESYSTEM</ons-list-header>
+				<ons-list-item modifier="nodivider">
+					<canvas style="display: block; margin-left: auto; margin-right: auto; max-width: 100%; height: 50vw;" id="canvasSystem" width="300px" height="300px">></canvas>
+				</ons-list-item>
+			</ons-list>
+			<ons-popover cancelable direction="down" id="popoverStatus">
+				<div style="padding: 20px; text-align: center;" id="textStatus">READY</div>
+			</ons-popover>
+		</ons-page>
+	</template>
+
+</body>
+<script src="js/pieChart.js"></script>
+<script src="js/canvastobmp.js"></script>
+<script src="js/drawtocanvas.js"></script>
+<script src="js/generatetocanvas.js"></script>
+<script src="js/imagepainting.js"></script>
+<script src="js/action.js"></script>
+<script src="js/parameter.js"></script>
+<script src="js/system.js"></script>
+<script src="js/playlist.js"></script>
+<script src="js/onsenui.min.js"></script>
+</html>
