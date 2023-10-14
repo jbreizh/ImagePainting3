@@ -12,7 +12,7 @@ In this version, i add :
 
 ## Introduction
 
-![DSCN1062](https://github.com/jbreizh/Imagepainting3/imagePainting3.jpg)
+![PRESENTATION](imagePainting3.jpg?raw=true "imagePainting3")
 
 New version of [ImagePainting2](https://github.com/jbreizh/imagePainting2) which was a new version of [ImagePainting](https://github.com/jbreizh/ImagePainting).... 
 
