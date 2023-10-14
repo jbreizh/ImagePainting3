@@ -21,9 +21,9 @@ function setParameter(jsonString) {
 	if (document.getElementById("textDelay") != null) document.getElementById("textDelay").innerHTML = PARAMETER.dly + "ms";
 	if (document.getElementById("sliderBrightness") != null) document.getElementById("sliderBrightness").value = PARAMETER.bts;
 	if (document.getElementById("textBrightness") != null) document.getElementById("textBrightness").innerHTML = PARAMETER.bts + "%";
-	if (document.getElementById("sliderCountdown") != null) document.getElementById("sliderCountdown").value = PARAMETER.cdn;
-	if (document.getElementById("textCountdown") != null) document.getElementById("textCountdown").innerHTML = PARAMETER.cdn + "ms";
-	if (document.getElementById("ckCountdown") != null) document.getElementById("ckCountdown").checked = PARAMETER.icdn;
+	if (document.getElementById("sliderWait") != null) document.getElementById("sliderWait").value = PARAMETER.wt;
+	if (document.getElementById("textWait") != null) document.getElementById("textWait").innerHTML = PARAMETER.wt + "px";
+	if (document.getElementById("ckWait") != null) document.getElementById("ckWait").checked = PARAMETER.iwt;
 	if (document.getElementById("sliderRepeat") != null) document.getElementById("sliderRepeat").value = PARAMETER.rpt;
 	if (document.getElementById("textRepeat") != null) document.getElementById("textRepeat").innerHTML = PARAMETER.rpt + "x";
 	if (document.getElementById("ckInvert") != null) document.getElementById("ckInvert").checked = PARAMETER.iivt;
@@ -59,8 +59,8 @@ function getParameter() {
 	// get PARAMETER values
 	if (document.getElementById("sliderDelay") != null) PARAMETER.dly = document.getElementById("sliderDelay").value;
 	if (document.getElementById("sliderBrightness") != null) PARAMETER.bts = document.getElementById("sliderBrightness").value;
-	if (document.getElementById("sliderCountdown") != null) PARAMETER.cdn = document.getElementById("sliderCountdown").value;
-	if (document.getElementById("ckCountdown") != null) PARAMETER.icdn = document.getElementById("ckCountdown").checked;
+	if (document.getElementById("sliderWait") != null) PARAMETER.wt = document.getElementById("sliderWait").value;
+	if (document.getElementById("ckWait") != null) PARAMETER.iwt = document.getElementById("ckWait").checked;
 	if (document.getElementById("sliderRepeat") != null) PARAMETER.rpt = document.getElementById("sliderRepeat").value;
 	if (document.getElementById("ckInvert") != null) PARAMETER.iivt = document.getElementById("ckInvert").checked;
 	if (document.getElementById("ckRepeat") != null) PARAMETER.irpt = document.getElementById("ckRepeat").checked;

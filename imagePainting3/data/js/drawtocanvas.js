@@ -87,14 +87,3 @@ function drawConvert(imageFrom, canvasTo, orientation ,gamma, pixel, pixels)
 	// put data in canvasTo
 	ctxTo.putImageData(imageData, 0, 0);
 }
-
-	////cut the line
-	//for (var i = 0; i < data.length; i += 4)
-	//{
-	//	if (i%(4*canvas.width)%(8*cut)<4*cut)
-	//	{
-	//		data[i] = 0;
-	//		data[i+1] = 0;
-	//		data[i+2] = 0;
-	//	}
-	//}

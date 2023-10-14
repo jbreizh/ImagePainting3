@@ -15,13 +15,14 @@ function setSystem(jsonString) {
         }
     }
     if (document.getElementById("selectParameterBitmap") != null) {
-        var oldSelected = document.getElementById("selectParameterBitmap").value;
+        //var oldSelected = document.getElementById("selectParameterBitmap").value;
         document.getElementById("selectParameterBitmap").length = 0;
         for (var file in SYSTEM.flt) {
             if (fileExtension(file)=="bmp") document.getElementById("selectParameterBitmap").add(new Option(file, file));
-            if (file == oldSelected) document.getElementById("selectParameterBitmap").value = file;
-            if (document.getElementById("selectParameterBitmap").value != oldSelected) document.getElementById("selectParameterBitmap").value = "";
+            //if (file == oldSelected) document.getElementById("selectParameterBitmap").value = file;
+            //if (document.getElementById("selectParameterBitmap").value != oldSelected) document.getElementById("selectParameterBitmap").value = "";
         }
+        document.getElementById("selectParameterBitmap").value = PARAMETER.bmp;
     }
     // set convert values
     if (document.getElementById("sliderConvertPixels") != null) {

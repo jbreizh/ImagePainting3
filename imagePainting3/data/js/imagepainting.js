@@ -16,15 +16,16 @@ window.fn.load = function(page) {
 };
 
 // Global Variable
-//var address = "";
+var address = "";
 //var address = "http://192.168.46.83";
-var address = "http://192.168.46.55";
+//var address = "http://192.168.46.55";
 var ACTION = {};
 var PARAMETER = {};
 var SYSTEM = {};
 var PLAYLIST = [];
 var imgParameterBitmap = document.createElement('img');
 var imgConvert = document.createElement('img');
+var canvasGenerateTemp = document.createElement("canvas");
 
 //--------------------------------------------------
 function updateStatus(message, color) {
@@ -135,8 +136,8 @@ document.addEventListener('init', function(event) {
 		var sliderBrightness = document.getElementById("sliderBrightness");
 		var textBrightness = document.getElementById("textBrightness");
 		var ckInvert = document.getElementById("ckInvert");
-		var sliderCountdown = document.getElementById("sliderCountdown");
-		var textCountdown = document.getElementById("textCountdown");
+		var sliderWait = document.getElementById("sliderWait");
+		var textWait = document.getElementById("textWait");
 		var sliderRepeat = document.getElementById("sliderRepeat");
 		var textRepeat = document.getElementById("textRepeat");
 		var sliderVcut = document.getElementById("sliderVcut");
@@ -144,7 +145,7 @@ document.addEventListener('init', function(event) {
 		var sliderHcut = document.getElementById("sliderHcut");
 		var textHcut = document.getElementById("textHcut");
 		var pickerColor = document.getElementById("pickerColor");
-		var ckCountdown = document.getElementById("ckCountdown");
+		var ckWait = document.getElementById("ckWait");
 		var ckRepeat = document.getElementById("ckRepeat");
 		var ckBounce = document.getElementById("ckBounce");
 		var ckVcutOff = document.getElementById("ckVcutOff");
@@ -153,11 +154,11 @@ document.addEventListener('init', function(event) {
 		var ckHcutColor = document.getElementById("ckHcutColor");
 		var ckEndOff = document.getElementById("ckEndOff");
 		var ckEndColor = document.getElementById("ckEndColor");
-		var btnSave = document.getElementById("btnSave");
-		var btnRestore = document.getElementById("btnRestore");
-		var btnDefault = document.getElementById("btnDefault");
-		var btnAdd = document.getElementById("btnAdd");
-		var btnDelete = document.getElementById("btnDelete");
+		var btnParameterSave = document.getElementById("btnParameterSave");
+		var btnParameterRestore = document.getElementById("btnParameterRestore");
+		var btnParameterDefault = document.getElementById("btnParameterDefault");
+		var btnParameterAdd = document.getElementById("btnParameterAdd");
+		var btnParameterDelete = document.getElementById("btnParameterDelete");
 		
 		// Parameters Event--------------------------------------------------
 		selectParameterBitmap.addEventListener('change', requestParameterWrite, false);
@@ -189,8 +190,8 @@ document.addEventListener('init', function(event) {
 		sliderBrightness.addEventListener('input', function() {
 			textBrightness.innerHTML = sliderBrightness.value + "%";
 		}, false);
-		sliderCountdown.addEventListener('input', function() {
-			textCountdown.innerHTML = sliderCountdown.value + "ms";
+		sliderWait.addEventListener('input', function() {
+			textWait.innerHTML = sliderWait.value + "px";
 		}, false);
 		sliderRepeat.addEventListener('input', function() {
 			textRepeat.innerHTML = sliderRepeat.value + "x";
@@ -203,7 +204,7 @@ document.addEventListener('init', function(event) {
 		}, false);
 		sliderDelay.addEventListener('change', requestParameterWrite, false);
 		sliderBrightness.addEventListener('change', requestParameterWrite, false);
-		sliderCountdown.addEventListener('change', requestParameterWrite, false);
+		sliderWait.addEventListener('change', requestParameterWrite, false);
 		sliderRepeat.addEventListener('change', requestParameterWrite, false);
 		sliderVcut.addEventListener('change', requestParameterWrite, false);
 		sliderHcut.addEventListener('change', requestParameterWrite, false);
@@ -232,7 +233,7 @@ document.addEventListener('init', function(event) {
 		ckEndOff.addEventListener('click', function() {
 			updateCheckbox(ckEndOff, ckEndColor);
 		}, false);
-		ckCountdown.addEventListener('click', requestParameterWrite, false);
+		ckWait.addEventListener('click', requestParameterWrite, false);
 		ckInvert.addEventListener('click', requestParameterWrite, false);
 		ckRepeat.addEventListener('click', requestParameterWrite, false);
 		ckBounce.addEventListener('click', requestParameterWrite, false);
@@ -242,14 +243,14 @@ document.addEventListener('init', function(event) {
 		ckHcutColor.addEventListener('click', requestParameterWrite, false);
 		ckEndColor.addEventListener('click', requestParameterWrite, false);
 		ckEndOff.addEventListener('click', requestParameterWrite, false);
-		btnSave.addEventListener('click', requestParameterSave, false);
-		btnRestore.addEventListener('click', requestParameterRestore, false);
-		btnDefault.addEventListener('click', requestParameterDefault, false);
-		btnAdd.addEventListener('click', function() {
+		btnParameterSave.addEventListener('click', requestParameterSave, false);
+		btnParameterRestore.addEventListener('click', requestParameterRestore, false);
+		btnParameterDefault.addEventListener('click', requestParameterDefault, false);
+		btnParameterAdd.addEventListener('click', function() {
 			addItemPlaylist();
 			fn.load('playlist.html');
 		}, false);
-		btnDelete.addEventListener('click', function() {
+		btnParameterDelete.addEventListener('click', function() {
 			requestFileDelete(selectParameter.value);
 		}, false);
 		
@@ -344,7 +345,6 @@ document.addEventListener('init', function(event) {
 		}, false);
 		
 		// Generate Variable--------------------------------------------------
-		var canvasGenerateTemp = document.createElement("canvas");
 		var canvasGenerate = document.getElementById("canvasGenerate");
 		var selectGenerate = document.getElementById("selectGenerate");
 		var selectGenerateGamma = document.getElementById("selectGenerateGamma");

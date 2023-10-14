@@ -1,6 +1,7 @@
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //#define STA       // Decomment this to use STA mode instead of AP
-#define BUTTON      // Decomment this to use BUTTON
+#define CORS      // Decomment this to disable CORS
+#define BUTTON    // Decomment this to use BUTTON
 #define FEATURE DotStarBgrFeature // Neopixels : NeoGrbFeature / Dotstars : DotStarBgrFeature
 #define METHOD DotStarSpiMethod // Neopixels :Neo800KbpsMethod / Dotstars : DotStarSpiMethod
 //Dotstars : DATA_PIN : MOSI / CLOCK_PIN :SCK (Wemos D1 mini DATA_PIN=D7(GREEN) CLOCK_PIN=D5 (Yellow))
@@ -52,8 +53,8 @@ struct t_parameter
   uint16_t indexstart;
   uint16_t indexstop;
   uint16_t indexmax;
-  long countdown;
-  bool iscountdown;
+  uint16_t wait;
+  bool iswait;
   uint8_t delay;
   uint8_t brightness;
   bool isinvert;
@@ -71,7 +72,7 @@ struct t_parameter
   bool isendcolor;
 };
 t_parameter PARAMETER; // Hold parameter
-const t_parameter PARAMETERDEFAULT = {"",0,0,0,1000,false,15,25,false,HtmlColor(0xffffff),1,false,false,1,false,false,1,false,false,false,false}; // default parameter value (can be edit)
+const t_parameter PARAMETERDEFAULT = {"",0,0,0,50,false,15,25,false,HtmlColor(0xffffff),1,false,false,1,false,false,1,false,false,true,false}; // default parameter value (can be edit)
 // end PARAMETER --------------
 
 // PLAYLIST --------------
@@ -92,9 +93,8 @@ t_action ACTION = {false, false};
 // RUNTIME --------------
 t_parameter PARAMETERTEMP; // Temp for parameter
 uint16_t INDEXCOUNTER; // Counter for index
-long COUNTDOWNCOUNTER; // Counter for countdown
+uint16_t WAITCOUNTER; // Counter for wait
 uint8_t REPEATCOUNTER; // Counter for repeat
-bool ISINVERTTEMP; // Temp for invert
 uint8_t VCUTCOUNTER; // Counter for vcut
 uint8_t HCUTCOUNTER; // Counter for hcut
 uint8_t PLAYLISTCOUNTER; // Counter for playlist
@@ -261,8 +261,22 @@ void setup()
   
   // called when the url is not defined
   server.onNotFound([]() {
+#ifdef CORS //CORS enable : respond to preflight
+    if (server.method() == HTTP_OPTIONS)
+    {
+      server.sendHeader("Access-Control-Max-Age", "10000");
+      server.sendHeader("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE");
+      server.sendHeader("Access-Control-Allow-Headers", "*");
+      server.send(200);
+      return;
+    }
+#endif
     handleFileRead(server.uri());
   });
+  
+#ifdef CORS //CORS enable : add allow origin *
+  server.enableCORS(true);
+#endif
 
   // Webserver start
   server.begin();
@@ -272,11 +286,9 @@ void setup()
   STRIP.ClearTo(RgbColor(0, 0, 0));
 
   // Parameter initialization
-  //if(parameterRestore(PARAMETERPATH).statusCode != 200)
   parameterDefault(PARAMETER);
 
   // Playlist initialization
-  //if(playlistRestore(PLAYLISTPATH).statusCode != 200)
   playlistDefault();
   
   // Button setup
@@ -468,7 +480,7 @@ t_httpAnswer playlistRead()
   t_httpAnswer httpAnswer;
   
   // New json document
-  StaticJsonDocument<2500> jsonDoc;
+  DynamicJsonDocument jsonDoc(2500);  //StaticJsonDocument<2500> jsonDoc; can cause stack buffer overflow
 
   // Write playlist as jsonArray
   JsonArray jsonArrayPlaylist = jsonDoc.to<JsonArray>();
@@ -532,7 +544,7 @@ t_httpAnswer playlistWrite(String stringPlaylist)
   t_httpAnswer httpAnswer;
   
   // New json document
-  StaticJsonDocument<2500> jsonDoc;
+  DynamicJsonDocument jsonDoc(2500); //StaticJsonDocument<2500> jsonDoc; can cause stack buffer overflow
 
   // Convert json String to json object
   DeserializationError error = deserializeJson(jsonDoc, stringPlaylist);
@@ -572,10 +584,20 @@ t_httpAnswer playlistWrite(String stringPlaylist)
       // Build httpAnswer and return it
       httpAnswer.statusCode = 500;
       httpAnswer.contentType = "text/plain";
-      httpAnswer.contentData = "PLAYLIST WRITE ERROR : FULL";
+      httpAnswer.contentData = "PLAYLIST WRITE ERROR : MAXSIZE="+String(PLAYLISTMAX);
       return httpAnswer;
     }
     
+    // Bmp not valid?
+    if (!NEOBMPFILE.Begin(LittleFS.open(jsonObjectParameter["bmp"].as<String>(), "r")))
+    {
+      //Build httpAnswer and return it
+      httpAnswer.statusCode = 500;
+      httpAnswer.contentType = "text/plain";
+      httpAnswer.contentData = "PLAYLIST WRITE ERROR : WRONG BITMAP "+jsonObjectParameter["bmp"].as<String>();
+      return httpAnswer;
+    }
+     
     // Copy jsonObjectParameter to parameter
     jsonObjectToparameter(jsonObjectParameter, PLAYLIST[PLAYLISTSIZE]);
 
@@ -679,8 +701,8 @@ void parameterTojsonObject(t_parameter &parameter, JsonObject &jsonObject)
   parameter.color.ToNumericalString(color, 9);
   jsonObject["clr"] = color;
   //
-  jsonObject["cdn"] = parameter.countdown;
-  jsonObject["icdn"] = parameter.iscountdown;
+  jsonObject["wt"] = parameter.wait;
+  jsonObject["iwt"] = parameter.iswait;
   //
   jsonObject["rpt"] = parameter.repeat;
   jsonObject["irpt"] = parameter.isrepeat;
@@ -769,8 +791,8 @@ void jsonObjectToparameter(JsonObject &jsonObject, t_parameter &parameter)
   if (!jsonObject["iivt"].isNull()) parameter.isinvert = jsonObject["iivt"];
   if (!jsonObject["clr"].isNull()) parameter.color.Parse<HtmlShortColorNames>(jsonObject["clr"].as<String>());
   //
-  if (!jsonObject["cdn"].isNull()) parameter.countdown = jsonObject["cdn"];
-  if (!jsonObject["icdn"].isNull()) parameter.iscountdown = jsonObject["icdn"];
+  if (!jsonObject["wt"].isNull()) parameter.wait = jsonObject["wt"];
+  if (!jsonObject["iwt"].isNull()) parameter.iswait = jsonObject["iwt"];
   //
   if (!jsonObject["rpt"].isNull()) parameter.repeat = jsonObject["rpt"];
   if (!jsonObject["irpt"].isNull()) parameter.isrepeat = jsonObject["irpt"];
@@ -826,22 +848,20 @@ t_httpAnswer parameterWrite(String stringParameter)
   // New bitmap : test it
   if (jsonObjectParameter["bmp"].as<String>() != PARAMETER.bmppath)
   {
-    // New bitmap valid : change indexstart ; indexstop and indexmax
-    if (NEOBMPFILE.Begin(LittleFS.open(jsonObjectParameter["bmp"].as<String>(), "r")))
-    {   
-      jsonObjectParameter["ist"] = 0;
-      jsonObjectParameter["isp"]= NEOBMPFILE.Height() - 1;
-      jsonObjectParameter["imx"] = NEOBMPFILE.Height() - 1;
-    }
     // Bitmap not valid : throw error
-    else
+    if (!NEOBMPFILE.Begin(LittleFS.open(jsonObjectParameter["bmp"].as<String>(), "r")))
     {
       // Build httpAnswer and return it
       httpAnswer.statusCode = 500;
       httpAnswer.contentType = "text/plain";
-      httpAnswer.contentData = "PARAMETER WRITE ERROR : WRONG BITMAP";
+      httpAnswer.contentData = "PARAMETER WRITE ERROR : WRONG BITMAP"+jsonObjectParameter["bmp"].as<String>();
       return httpAnswer;
     }
+    
+    // New bitmap valid : change indexstart ; indexstop and indexmax
+    jsonObjectParameter["ist"] = 0;
+    jsonObjectParameter["isp"]= NEOBMPFILE.Height() - 1;
+    jsonObjectParameter["imx"] = NEOBMPFILE.Height() - 1;
   }
 
   // Copy jsonObjectParameter in PARAMETER
@@ -995,6 +1015,15 @@ void handleFileUpload()
   //
   HTTPUpload& upload = server.upload();
 
+  // Test the upload
+  //FSInfo fs_info;
+  //LittleFS.info(fs_info);
+  //if (upload.contentLength > (fs_info.totalBytes-fs_info.usedBytes))
+  //{
+  //  server.send(413, "text/plain", "UPLOAD ERROR : TOO BIG");
+  //  return;
+  //}
+
   // Upload start
   if (upload.status == UPLOAD_FILE_START)
   {
@@ -1031,7 +1060,7 @@ t_httpAnswer systemRead()
   fs::Dir dir = LittleFS.openDir("/");
 
   // New json document
-  StaticJsonDocument<2000> jsonDoc;
+  DynamicJsonDocument jsonDoc(2500); //StaticJsonDocument<2500> jsonDoc; can cause stack buffer overflow
   
   // Store ledInfo in json nested object
   JsonObject ledInfo  = jsonDoc.createNestedObject("ldi");
@@ -1111,11 +1140,7 @@ t_httpAnswer playAnimation()
   // Load parameter from PLAYLIST[0] or from PARAMETER
   if (ACTION.isplaylist)
   {
-    if (PLAYLISTSIZE > 0)
-    {
-      PARAMETERTEMP = PLAYLIST[0];
-    }
-    else
+    if (PLAYLISTSIZE <= 0)
     {
       // Build httpAnswer and return it
       httpAnswer.statusCode = 500;
@@ -1123,6 +1148,8 @@ t_httpAnswer playAnimation()
       httpAnswer.contentData = "PLAY ERROR : EMPTY PLAYLIST";
       return httpAnswer;
     }
+    
+    PARAMETERTEMP = PLAYLIST[0];
   }
   else
   {
@@ -1141,18 +1168,18 @@ t_httpAnswer playAnimation()
   
   // Playlist counter initialization
   PLAYLISTCOUNTER = 0;
-  
-  // Invert initialization
-  ISINVERTTEMP = PARAMETERTEMP.isinvert;
-  
+
   // Repeat counter initialization
   REPEATCOUNTER = PARAMETERTEMP.repeat;
+  
+  // Wait counter initialization
+  WAITCOUNTER = PARAMETERTEMP.wait;
   
   // Vertical cut counter initialization
   VCUTCOUNTER = 2 * PARAMETERTEMP.vcut;
   
   // Index initialization
-  if (ISINVERTTEMP) INDEXCOUNTER = PARAMETERTEMP.indexstop;
+  if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
   else INDEXCOUNTER = PARAMETERTEMP.indexstart;
   
   // Launch a new animation
@@ -1191,11 +1218,7 @@ t_httpAnswer stopAnimation(String action)
     // Load PARAMETERTEMP from PLAYLIST[0] or from PARAMETER
     if (ACTION.isplaylist)
     {
-      if (PLAYLISTSIZE > 0)
-      {
-        PARAMETERTEMP = PLAYLIST[0];
-      }
-      else
+      if (PLAYLISTSIZE <= 0)
       {
         // Build httpAnswer and return it
         httpAnswer.statusCode = 500;
@@ -1203,6 +1226,8 @@ t_httpAnswer stopAnimation(String action)
         httpAnswer.contentData = "LIGHT ERROR : EMPTY PLAYLIST";
         return httpAnswer;
       }
+      
+      PARAMETERTEMP = PLAYLIST[0];
     }
     else
     {
@@ -1219,11 +1244,7 @@ t_httpAnswer stopAnimation(String action)
     // Load PARAMETERTEMP from PLAYLIST[0] or from PARAMETER
     if (ACTION.isplaylist)
     {
-      if (PLAYLISTSIZE > 0)
-      {
-        PARAMETERTEMP = PLAYLIST[0];
-      }
-      else
+      if (PLAYLISTSIZE <= 0)
       {
         // Build httpAnswer and return it
         httpAnswer.statusCode = 500;
@@ -1231,6 +1252,8 @@ t_httpAnswer stopAnimation(String action)
         httpAnswer.contentData = "BURN ERROR : EMPTY PLAYLIST";
         return httpAnswer;
       }
+      
+      PARAMETERTEMP = PLAYLIST[0];
     }
     else
     {
@@ -1292,9 +1315,6 @@ void updateAnimation(const AnimationParam & param)
       // Restart the animation
       ANIMATIONS.RestartAnimation(param.index);
 
-      // Countdown counter initialization
-      COUNTDOWNCOUNTER = millis();
-
       // Vertical cut to do
       if ((PARAMETERTEMP.isvcutcolor || PARAMETERTEMP.isvcutoff) && (VCUTCOUNTER <= PARAMETERTEMP.vcut))
       {
@@ -1307,7 +1327,7 @@ void updateAnimation(const AnimationParam & param)
         if (PARAMETERTEMP.isvcutcolor) clearToSHADER();
 
         // Index incrementation
-        if (ISINVERTTEMP) INDEXCOUNTER -= 1;
+        if (PARAMETERTEMP.isinvert) INDEXCOUNTER -= 1;
         else INDEXCOUNTER += 1;
       }
       
@@ -1321,7 +1341,7 @@ void updateAnimation(const AnimationParam & param)
         NEOBMPFILE.Render<BrightShader>(STRIP, SHADER, 0, 0, INDEXCOUNTER, NEOBMPFILE.Width());
 
         // Index incrementation
-        if (ISINVERTTEMP) INDEXCOUNTER -= 1;
+        if (PARAMETERTEMP.isinvert) INDEXCOUNTER -= 1;
         else INDEXCOUNTER += 1;
       }
     }
@@ -1335,33 +1355,39 @@ void updateAnimation(const AnimationParam & param)
         // Restart the animation
         ANIMATIONS.RestartAnimation(param.index);
 
-        // Countdown to do
-        if (PARAMETERTEMP.iscountdown && (millis() - COUNTDOWNCOUNTER <= PARAMETERTEMP.countdown))
+        // Wait to do
+        if (PARAMETERTEMP.iswait && (WAITCOUNTER > 0))
         {
-          // Blank or color the strip during the countdown
+          // Repeat counter incrementation
+          WAITCOUNTER -= 1;
+          
+          // Blank or color the strip during the wait
           if (PARAMETERTEMP.isendoff) STRIP.ClearTo(RgbColor(0, 0, 0));
           if (PARAMETERTEMP.isendcolor) clearToSHADER();
         }
-        // No countdown to do? so let's repeat
+        // No wait to do? so let's repeat
         else
         {
           // Repeat counter incrementation
           REPEATCOUNTER -= 1;
+
+          // Wait counter initialization
+          WAITCOUNTER = PARAMETERTEMP.wait;
           
           //invert invertTemp to bounce
-          if (PARAMETERTEMP.isbounce) ISINVERTTEMP = !ISINVERTTEMP;
+          if (PARAMETERTEMP.isbounce) PARAMETERTEMP.isinvert = !PARAMETERTEMP.isinvert;
   
           // Index initialization
-          if (ISINVERTTEMP) INDEXCOUNTER = PARAMETERTEMP.indexstop;
+          if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
           else INDEXCOUNTER = PARAMETERTEMP.indexstart;
         }
       }
       
       // Playlist to do
-      else if (ACTION.isplaylist && (PLAYLISTCOUNTER+1 < PLAYLISTSIZE))
+      else if (ACTION.isplaylist && (PLAYLISTCOUNTER < PLAYLISTSIZE-1))
       {
-        // Stop the animation
-        ANIMATIONS.StopAnimation(param.index);
+        // Restart the animation
+        ANIMATIONS.RestartAnimation(param.index);
 
         // Playlist counter incrementation
         PLAYLISTCOUNTER += 1;
@@ -1369,25 +1395,25 @@ void updateAnimation(const AnimationParam & param)
         // Load new parameter from playlist
         PARAMETERTEMP = PLAYLIST[PLAYLISTCOUNTER];
 
-        // Load new bmp from parameter
+        // Load new bmp from PARAMETERTEMP
         NEOBMPFILE.Begin(LittleFS.open(PARAMETERTEMP.bmppath, "r"));
-        
-        // Invert initialization
-        ISINVERTTEMP = PARAMETERTEMP.isinvert;
         
         // Repeat counter initialization
         REPEATCOUNTER = PARAMETERTEMP.repeat;
+
+        // Wait counter initialization
+        WAITCOUNTER = PARAMETERTEMP.wait;
         
         // Vertical cut counter initialization
         VCUTCOUNTER = 2 * PARAMETERTEMP.vcut;
         
         // Index initialization
-        if (ISINVERTTEMP) INDEXCOUNTER = PARAMETERTEMP.indexstop;
+        if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
         else INDEXCOUNTER = PARAMETERTEMP.indexstart;
         
-        // Launch a new animation
-        ANIMATIONS.StartAnimation(0, PARAMETERTEMP.delay, updateAnimation);
-
+        // Change animation delay
+        ANIMATIONS.ChangeAnimationDuration(0, PARAMETERTEMP.delay);
+        
         // Pause the new animation if playlist trigger by play
         if (ACTION.istrigger) ANIMATIONS.Pause();
       }

@@ -127,8 +127,8 @@
 					<ons-select style="width: 100%;" id="selectParameter"><option value=""></option></ons-select>
 				</ons-list-item>
 				<ons-list-item modifier="nodivider">
-					<div class="left" style="width: 47%;"><ons-button modifier="large" id="btnRestore">Restore</ons-button></div>
-					<div class="right" style="width: 47%;"><ons-button modifier="large" style="background-color: red;" id="btnDelete">Delete</ons-button></div>
+					<div class="left" style="width: 47%;"><ons-button modifier="large" id="btnParameterRestore">Restore</ons-button></div>
+					<div class="right" style="width: 47%;"><ons-button modifier="large" style="background-color: red;" id="btnParameterDelete">Delete</ons-button></div>
 				</ons-list-item>				
 				<ons-list-header>BITMAP</ons-list-header>
 				<ons-list-item modifier="nodivider">
@@ -184,12 +184,21 @@
 								<div class="right" id="textRepeat"></div>
 							</ons-list-item>
 							<ons-list-item modifier="nodivider">
+								<div class="left">Wait:</div>
+								<div class="center"><ons-range style="width: 100%;" min="0" max="200" id="sliderWait"></ons-range></div>
+								<div class="right" id="textWait"></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
 								<div class="left">Repeat?</div>
 								<div class="right"><ons-checkbox id="ckRepeat"></ons-checkbox></div>
 							</ons-list-item>
 							<ons-list-item modifier="nodivider">
 								<div class="left">Bounce?</div>
 								<div class="right"><ons-checkbox id="ckBounce"></ons-checkbox></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
+								<div class="left">Wait?</div>
+								<div class="right"><ons-checkbox id="ckWait"></ons-checkbox></div>
 							</ons-list-item>
 						</ons-list>
 					</div>
@@ -249,22 +258,6 @@
 						</ons-list>
 					</div>
 				</ons-list-item>
-				<ons-list-item modifier="nodivider" expandable>
-					COUNTDOWN
-					<div class="expandable-content">
-						<ons-list modifier="inset">
-							<ons-list-item modifier="nodivider">
-								<div class="left">Countdown:</div>
-								<div class="center"><ons-range style="width: 100%;" min="0" max="15000" id="sliderCountdown"></ons-range></div>
-								<div class="right" id="textCountdown"></div>
-							</ons-list-item>
-							<ons-list-item modifier="nodivider">
-								<div class="left">Countdown?</div>
-								<div class="right"><ons-checkbox id="ckCountdown"></ons-checkbox></div>
-							</ons-list-item>
-						</ons-list>
-					</div>
-				</ons-list-item>
 			</ons-list>
 			
 			<ons-popover cancelable direction="down" id="popoverStatus">
@@ -272,9 +265,9 @@
 			</ons-popover>
 			<ons-bottom-toolbar>
 				<ons-row>
-					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" id="btnSave">Save</ons-button></ons-col>
-					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" style="background-color: orange;" id="btnDefault">Default</ons-button></ons-col>
-					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" style="background-color: red;" id="btnAdd">Add</ons-button></ons-col>
+					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" id="btnParameterSave">Save</ons-button></ons-col>
+					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" style="background-color: orange;" id="btnParameterDefault">Default</ons-button></ons-col>
+					<ons-col width="33%" style="text-align: center"><ons-button modifier="large" style="background-color: red;" id="btnParameterAdd">Add</ons-button></ons-col>
 				</ons-row>
 			</ons-bottom-toolbar>
 		</ons-page>
