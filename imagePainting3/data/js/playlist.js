@@ -2,10 +2,11 @@
 function setPlaylist(jsonString) {
     PLAYLIST = JSON.parse(jsonString);
     // set playlist values
+    if (document.getElementById("headerPlaylistParameterList") != null) document.getElementById("headerPlaylistParameterList").innerHTML = "PARAMETER LIST = " + getDurationPlaylist(PLAYLIST) + "MS";
     if (document.getElementById("onsplaylist") != null) {
         var output = "";
         for (var i=0; i < PLAYLIST.length; i++){
-            output += "<ons-list-item modifier=\"longdivider\">"+"<div class=\"left\">" + i + "</div>" + "<div class=\"center\">" + PLAYLIST[i].bmp + "</div>" + "<div class=\"right\"><ons-button modifier=\"quiet\" onclick=\"deleteItemPlaylist("+ i +");\"><ons-icon icon=\"myTrash\"></ons-icon></ons-button></div>" + "</ons-list-item>";
+            output += "<ons-list-item modifier=\"longdivider\">"+"<div class=\"left\">" + i + "</div>" + "<div class=\"center\">" + PLAYLIST[i].bmp + " (" + getDurationParameter(PLAYLIST[i]) + "ms)</div>" + "<div class=\"right\"><ons-button modifier=\"quiet\" onclick=\"deleteItemPlaylist("+ i +");\"><ons-icon icon=\"myTrash\"></ons-icon></ons-button></div>" + "</ons-list-item>";
         }
         document.getElementById("onsplaylist").innerHTML = output;
     }
@@ -34,6 +35,17 @@ function deleteItemPlaylist(index) {
 function addItemPlaylist() {
 	PLAYLIST.push(PARAMETER);
     requestPlaylistWrite();
+}
+
+//--------------------------------------------------
+function getDurationPlaylist(playlist) {
+	var durationPlaylist = 0;
+	// Add duration of each parameter of the playlist
+    // (getDurationParameter(parameter) in parameter.js)
+    for (var i=0; i < PLAYLIST.length; i++){
+        durationPlaylist += getDurationParameter(playlist[i])
+    }
+	return durationPlaylist;
 }
 
 //--------------------------------------------------

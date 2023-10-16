@@ -2,6 +2,7 @@
 function setParameter(jsonString) {
 	PARAMETER = JSON.parse(jsonString);
 	// set PARAMETER values
+	if (document.getElementById("headerParameterBitmap") != null) document.getElementById("headerParameterBitmap").innerHTML = "BITMAP = " + getDurationParameter(PARAMETER) + "MS";
 	if (document.getElementById("selectParameterBitmap") != null) document.getElementById("selectParameterBitmap").value = PARAMETER.bmp;
 	if (document.getElementById("sliderParameterIndexStart") != null) {
 		document.getElementById("sliderParameterIndexStart").setAttribute("min", 0);
@@ -76,6 +77,19 @@ function getParameter() {
 	if (document.getElementById("ckEndColor") != null) PARAMETER.iedc = document.getElementById("ckEndColor").checked;
 	// convert json to string
 	return JSON.stringify(PARAMETER);
+}
+
+//--------------------------------------------------
+function getDurationParameter(parameter) {
+	// Duration of the current parameter
+	var durationParameter = (parameter.isp - parameter.ist + 1) * parameter.dly;
+	// Add duration of the repeat or bounce
+	if (parameter.irpt || parameter.ibnc) {
+		durationParameter+= parameter.rpt * (parameter.isp - parameter.ist + 1) * parameter.dly;
+		// duration of the wait
+		if (parameter.iwt) durationParameter+= parameter.rpt * parameter.wt * parameter.dly;
+	}
+	return durationParameter;
 }
 
 //--------------------------------------------------

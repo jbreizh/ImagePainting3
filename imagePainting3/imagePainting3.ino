@@ -1358,7 +1358,7 @@ void updateAnimation(const AnimationParam & param)
         // Wait to do
         if (PARAMETERTEMP.iswait && (WAITCOUNTER > 0))
         {
-          // Repeat counter incrementation
+          // Wait counter incrementation
           WAITCOUNTER -= 1;
           
           // Blank or color the strip during the wait
