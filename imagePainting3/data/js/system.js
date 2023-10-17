@@ -4,21 +4,21 @@ function setSystem(jsonString) {
     if (document.getElementById("selectPlaylist") != null) {
         document.getElementById("selectPlaylist").length = 0;
         for (var file in SYSTEM.flt) {
-            if (file.startsWith("playlist")&&fileExtension(file)=="json") document.getElementById("selectPlaylist").add(new Option(file, file));
+            if (file.includes("playlist")&&getFileExtension(file)=="json") document.getElementById("selectPlaylist").add(new Option(file, file));
         }
     }
     // set parameter values
     if (document.getElementById("selectParameter") != null) {
         document.getElementById("selectParameter").length = 0;
         for (var file in SYSTEM.flt) {
-            if (file.startsWith("parameter")&&fileExtension(file)=="json") document.getElementById("selectParameter").add(new Option(file, file));
+            if (file.includes("bmp")&&getFileExtension(file)=="json") document.getElementById("selectParameter").add(new Option(file, file));
         }
     }
     if (document.getElementById("selectParameterBitmap") != null) {
         //var oldSelected = document.getElementById("selectParameterBitmap").value;
         document.getElementById("selectParameterBitmap").length = 0;
         for (var file in SYSTEM.flt) {
-            if (fileExtension(file)=="bmp") document.getElementById("selectParameterBitmap").add(new Option(file, file));
+            if (getFileExtension(file)=="bmp") document.getElementById("selectParameterBitmap").add(new Option(file, file));
             //if (file == oldSelected) document.getElementById("selectParameterBitmap").value = file;
             //if (document.getElementById("selectParameterBitmap").value != oldSelected) document.getElementById("selectParameterBitmap").value = "";
         }
@@ -59,63 +59,42 @@ function setSystem(jsonString) {
 }
 
 //--------------------------------------------------
-function fileExtension(fileName) {
-	// regex
-	var extRegex = /(?:\.([^.]+))?$/;
-	// retrieve extension
-	return extRegex.exec(fileName)[1];
+function getFileBasename(fileName) {
+    // retrieve the index of the last dot and return basename
+    var dotLastIndex = fileName.lastIndexOf('.');
+    return fileName.substring(0, dotLastIndex);
 }
 
 //--------------------------------------------------
-function trimFileName(fileName, newExt) {
-	// regex
-	var extRegex = /(?:\.([^.]+))?$/;
-	// retrieve current extension
-	var currentExt = extRegex.exec(fileName)[1];
-	// retrieve base name
-	var baseName = fileName.substring(0, fileName.length - (currentExt.length + 1));
-	// spiffs support maxi 31 characters (extension include) so we trim the baseName to 20 characters for security
-	if (baseName.length > 20) {
-		baseName = baseName.substring(0, 20);
-	}
-	// 
-	var trimName;
-	// keep current extension 
-	if (newExt == "") {
-		trimName = baseName + "." + currentExt;
-	}
-	// add the new extension
-	else {
-		trimName = baseName + "." + newExt;
-	}
-	return trimName;
+function getFileExtension(fileName) {
+    // retrieve the index of the last dot and return extension
+    var dotLastIndex = fileName.lastIndexOf('.');
+    return fileName.substring(dotLastIndex+1, fileName.length);
 }
 
 //--------------------------------------------------
 function download(url, name) {
-	updateStatus("DOWNLOAD SUCCESS", "green");
-	// create a link
-	var a = document.createElement('a');
-	// create a link
-	a.href = url;
-	// set the name of the link
-	a.download = name;
-	// download the link
-	a.click();
+    updateStatus("DOWNLOAD SUCCESS", "green");
+    // create a link with url, name
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    // download the link
+    a.click();
 }
 
 //--------------------------------------------------
 function upload(blob, name) {
-	// too big? display an error
-	if (blob.size > SYSTEM.fsi.fbs) {
-		updateStatus("UPLOAD ERROR : NOT ENOUGH SPACE", "red");
-	}
-	// no problem? send the file
-	else {
-		var form = new FormData();
-		form.append('file', blob, name);
-		requestFileUpload(form);
-	}
+    // too big? display an error
+    if (blob.size > SYSTEM.fsi.fbs) {
+        updateStatus("UPLOAD ERROR : NOT ENOUGH SPACE", "red");
+    }
+    // no problem? send the file
+    else {
+        var form = new FormData();
+        form.append('file', blob, name);
+        requestFileUpload(form);
+    }
 }
 
 //--------------------------------------------------
@@ -184,40 +163,40 @@ function requestFileDelete(fileName) {
 
 //--------------------------------------------------
 function requestParameterSave() {
-	var xhr = new XMLHttpRequest();
-	xhr.onload = function() {
-		if (this.status == 200) {
-			updateStatus(this.responseText, "green");
-		} else {
-			updateStatus(this.responseText, "red");
-		}
-		requestSystemRead();
-	};
-	
-	xhr.onerror = function() {
-		updateStatus("PARAMETER SAVE ERROR : CONNECTION LOST", "red");
-	};
-	
-	xhr.open("GET", address + "/parameterSave", true);
-	xhr.send(null);
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function() {
+        if (this.status == 200) {
+            updateStatus(this.responseText, "green");
+        } else {
+            updateStatus(this.responseText, "red");
+        }
+        requestSystemRead();
+    };
+    
+    xhr.onerror = function() {
+        updateStatus("PARAMETER SAVE ERROR : CONNECTION LOST", "red");
+    };
+    
+    xhr.open("GET", address + "/parameterSave", true);
+    xhr.send(null);
 }
 
 //--------------------------------------------------
 function requestPlaylistSave() {
-	var xhr = new XMLHttpRequest();
-	xhr.onload = function() {
-		if (this.status == 200) {
-			updateStatus(this.responseText, "green");
-		} else {
-			updateStatus(this.responseText, "red");
-		}
-		requestSystemRead();
-	};
-	
-	xhr.onerror = function() {
-		updateStatus("PLAYLIST SAVE ERROR : CONNECTION LOST", "red");
-	};
-	
-	xhr.open("GET", address + "/playlistSave", true);
-	xhr.send(null);
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function() {
+        if (this.status == 200) {
+            updateStatus(this.responseText, "green");
+        } else {
+            updateStatus(this.responseText, "red");
+        }
+        requestSystemRead();
+    };
+    
+    xhr.onerror = function() {
+        updateStatus("PLAYLIST SAVE ERROR : CONNECTION LOST", "red");
+    };
+    
+    xhr.open("GET", address + "/playlistSave", true);
+    xhr.send(null);
 }

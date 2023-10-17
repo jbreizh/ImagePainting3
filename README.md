@@ -8,6 +8,8 @@ Luckily this version will be the ultimate ImagePainting (no more major feature/b
 
 ![README01](images/readme01.png?raw=true "readme01")
 
+In this version, i had to think again the API to communicate between the frontend and the backend. So deep change, a lot of rewrite and maybe bug. Nevertheless i pretty satisfy with this new API as it let me introduce a lot of new feature while being simpler and solving some dirty hack i had to use before.
+
 In this version, i push my poor coding skill to the limits and add :
 
 * possibility to save/restore parameter in json file
@@ -26,12 +28,10 @@ After a simple [electronic wiring](https://github.com/jbreizh/Imagepainting3/wik
 
 ## Documentation
 
-[See Wiki](https://github.com/jbreizh/Imagepainting3/wiki)
+[See Wiki](https://github.com/jbreizh/Imagepainting3/wiki).
 
 ## Picture pack
 
 I have put you some picture inside a [picture pack](https://github.com/jbreizh/imagePaintingPack).
 
 ![README03](images/readme03.png?raw=true "readme03")
-
-This picture mainly come from the commercial project [Pixelstick](http://www.thepixelstick.com/index.html) and [Magilight](https://www.fotorgear.com/products/magilight).

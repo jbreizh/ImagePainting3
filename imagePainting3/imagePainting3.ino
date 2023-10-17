@@ -1,6 +1,7 @@
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 //#define STA       // Decomment this to use STA mode instead of AP
 //#define CORS      // Decomment this to support CORS
+//#define DEBUG     // Decomment this to print some debug indication
 #define BUTTON    // Decomment this to use BUTTON
 #define FEATURE DotStarBgrFeature // Neopixels : NeoGrbFeature / Dotstars : DotStarBgrFeature
 #define METHOD DotStarSpiMethod // Neopixels :Neo800KbpsMethod / Dotstars : DotStarSpiMethod
@@ -112,6 +113,12 @@ boolean ISBTNA = false;
 boolean ISBTNB = false;
 boolean ISBTNAHOLD = false;
 boolean ISBTNBHOLD = false;
+#endif
+// end BUTTON-----------
+
+// DEBUG --------------
+#ifdef DEBUG
+long ANIMATIONDURATION;
 #endif
 // end BUTTON-----------
 
@@ -382,21 +389,35 @@ String getContentType(String filename)
 }
 
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-String findNewName(String baseName, String extension)
+String getFileBasename(String fileName)
 {
-  // Initialize newName = basename1.extension
-  uint8_t i = 0;
-  String newName = baseName + String(i) + "." + extension;
+    int dotLastIndex = fileName.lastIndexOf('.');
+    return fileName.substring(0, dotLastIndex);
+}
+
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+String getFileExtension(String fileName)
+{
+    int dotLastIndex = fileName.lastIndexOf('.');
+    return fileName.substring(dotLastIndex+1, fileName.length());
+}
+
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+String findFileNewname(String basename, String extension)
+{
+  // Initialize newname = basename.extension
+  String newname = basename + "." + extension;
   
-  // Find the first newName = basename{i}.extension available
-  while (LittleFS.exists(newName))
+  // Find the first newname = basename.i.extension available
+  uint8_t i = 0;
+  while (LittleFS.exists(newname))
   {
+    newname = basename + "." + String(i) + "." + extension;
     i+=1;
-    newName = baseName + String(i) + "." + extension;
   }
 
   //return newName
-  return newName;
+  return newname;
 }
 
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -533,7 +554,7 @@ t_httpAnswer playlistSave(String playlistPath)
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 void handlePlaylistSave()
 {
-  t_httpAnswer httpAnswer = playlistSave(findNewName("playlist", "json"));
+  t_httpAnswer httpAnswer = playlistSave(findFileNewname("playlist", "json"));
   server.send(httpAnswer.statusCode, httpAnswer.contentType, httpAnswer.contentData);
 }
 
@@ -774,7 +795,7 @@ t_httpAnswer parameterSave(String parameterPath)
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 void handleParameterSave()
 {
-  t_httpAnswer httpAnswer = parameterSave(findNewName("parameter", "json"));
+  t_httpAnswer httpAnswer = parameterSave(findFileNewname(PARAMETER.bmppath,"json"));
   server.send(httpAnswer.statusCode, httpAnswer.contentType, httpAnswer.contentData);
 }
 
@@ -950,8 +971,8 @@ t_httpAnswer fileDelete()
   // parse file from request
   String path = server.arg("plain");
 
-  // protect system files
-  if ( path == "" || path == "/" || path == "index.html" || path == "css" || path == "js" || path == "title.png")
+  // check if the file is a system files
+  if (path == "" || path == "/" || path == "index.html" || path == "css" || path == "js" || path == "title.png")
   {
     // Build httpAnswer and return it
     httpAnswer.statusCode = 500;
@@ -970,8 +991,15 @@ t_httpAnswer fileDelete()
     return httpAnswer;
   }
 
-  // if delete current bitmap onload it
-  if ( path == PARAMETER.bmppath) PARAMETER.bmppath = "";
+  // check if the file is the current bitmap
+  if (path == PARAMETER.bmppath)
+  {
+    // Build httpAnswer and return it
+    httpAnswer.statusCode = 500;
+    httpAnswer.contentType = "text/plain";
+    httpAnswer.contentData = "DELETE ERROR : CURRENT BITMAP";
+    return httpAnswer;
+  }
 
   // Delete the file
   LittleFS.remove(path);
@@ -1015,22 +1043,18 @@ void handleFileUpload()
   //
   HTTPUpload& upload = server.upload();
 
-  // Test the upload
-  //FSInfo fs_info;
-  //LittleFS.info(fs_info);
-  //if (upload.contentLength > (fs_info.totalBytes-fs_info.usedBytes))
-  //{
-  //  server.send(413, "text/plain", "UPLOAD ERROR : TOO BIG");
-  //  return;
-  //}
-
   // Upload start
   if (upload.status == UPLOAD_FILE_START)
   {
+    // Reject file too big
+    FSInfo fs_info;
+    LittleFS.info(fs_info);
+    if (upload.contentLength > (fs_info.totalBytes-fs_info.usedBytes)) return;
+    
     // Retrieve and correct filname
-    String filename = upload.filename;
-    if (!filename.startsWith("/")) filename = "/" + filename;
-
+    String filename =  findFileNewname(getFileBasename(upload.filename), getFileExtension(upload.filename)); //String filename = upload.filename;
+    //if (!filename.startsWith("/")) filename = "/" + filename; //not usefull for littlefs ???
+    
     // Open the file for writing in LittleFS (create if it doesn't exist)
     UPLOADFILE = LittleFS.open(filename, "w");
   }
@@ -1181,10 +1205,14 @@ t_httpAnswer playAnimation()
   // Index initialization
   if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
   else INDEXCOUNTER = PARAMETERTEMP.indexstart;
+
+#ifdef DEBUG
+  ANIMATIONDURATION = millis();
+#endif
   
   // Launch a new animation
   ANIMATIONS.StartAnimation(0, PARAMETERTEMP.delay, updateAnimation);
-
+  
   // Build httpAnswer and return it
   httpAnswer.statusCode = 200;
   httpAnswer.contentType = "text/plain";
@@ -1423,10 +1451,15 @@ void updateAnimation(const AnimationParam & param)
       {
         // Stop the animation
         ANIMATIONS.StopAnimation(param.index);
-
+        
         // Blank or color the strip if needed
         if (PARAMETERTEMP.isendoff) STRIP.ClearTo(RgbColor(0, 0, 0));
         if (PARAMETERTEMP.isendcolor) clearToSHADER();
+#ifdef DEBUG
+        Serial.print("Animation duration :");
+        Serial.println(millis() - ANIMATIONDURATION);
+#endif
+        
       }
     }
   }

@@ -328,10 +328,10 @@ document.addEventListener('init', function(event) {
 			
 		}, false);
 		btnConvertUpload.addEventListener('click', function() {
-			upload(CanvasToBMP.toBlob(canvasConvert), trimFileName(selectConvert.files[0].name, "bmp"));
+			upload(CanvasToBMP.toBlob(canvasConvert), getFileBasename(selectConvert.files[0].name)+".bmp");
 		}, false);
 		btnConvertDownload.addEventListener('click', function() {
-			download(CanvasToBMP.toDataURL(canvasConvert), trimFileName(selectConvert.files[0].name, "bmp"));
+			download(CanvasToBMP.toDataURL(canvasConvert), getFileBasename(selectConvert.files[0].name)+".bmp");
 		}, false);
 		
 		// Main --------------------------------------------------
@@ -412,7 +412,7 @@ document.addEventListener('init', function(event) {
 			download(address + "/" + selectSystem.value, selectSystem.value.substring(1));
 		}, false);
 		btnSystemUpload.addEventListener('click', function() {
-			if (selectSystemUpload.files[0]) upload(selectSystemUpload.files[0], trimFileName(selectSystemUpload.files[0].name, ""));
+			if (selectSystemUpload.files[0]) upload(selectSystemUpload.files[0], selectSystemUpload.files[0].name);
 			else updateStatus("UPLOAD ERROR : NO FILE", "red");
 		}, false);
 		
