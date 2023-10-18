@@ -1416,6 +1416,16 @@ void updateAnimation(const AnimationParam & param)
       {
         // Restart the animation
         ANIMATIONS.RestartAnimation(param.index);
+        
+        // Pause the new animation if playlist trigger by play
+        if (ACTION.istrigger)
+        {
+          ANIMATIONS.Pause();
+          
+          // Blank or color the strip during the pause
+          if (PARAMETERTEMP.isendoff) STRIP.ClearTo(RgbColor(0, 0, 0));
+          if (PARAMETERTEMP.isendcolor) clearToSHADER();
+        }
 
         // Playlist counter incrementation
         PLAYLISTCOUNTER += 1;
@@ -1441,9 +1451,6 @@ void updateAnimation(const AnimationParam & param)
         
         // Change animation delay
         ANIMATIONS.ChangeAnimationDuration(0, PARAMETERTEMP.delay);
-        
-        // Pause the new animation if playlist trigger by play
-        if (ACTION.istrigger) ANIMATIONS.Pause();
       }
       
       // Nothing more to do
@@ -1455,11 +1462,11 @@ void updateAnimation(const AnimationParam & param)
         // Blank or color the strip if needed
         if (PARAMETERTEMP.isendoff) STRIP.ClearTo(RgbColor(0, 0, 0));
         if (PARAMETERTEMP.isendcolor) clearToSHADER();
+        
 #ifdef DEBUG
         Serial.print("Animation duration :");
         Serial.println(millis() - ANIMATIONDURATION);
 #endif
-        
       }
     }
   }
