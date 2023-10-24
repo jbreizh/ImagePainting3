@@ -1,8 +1,9 @@
 //--------------------------------------------------
 function generate(canvas, effect)
 {
-    if(effect=="generateCircle") generateCircle(canvas);
-    else if (effect=="generateRainbow") generateRainbow(canvas);
+    if(effect=="circle") generateCircle(canvas);
+    else if (effect=="rainbow") generateRainbow(canvas);
+    else if (effect=="solid") generateSolid(canvas);
 }
 
 //--------------------------------------------------
@@ -11,7 +12,7 @@ function generateCircle(canvas)
     // canvas
     var ctx=canvas.getContext("2d");
     // save context
-	ctx.save();
+    ctx.save();
     // initialize canvas in black
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -21,7 +22,7 @@ function generateCircle(canvas)
         var x = Math.floor(Math.random()*canvas.width);
         var y = Math.floor(Math.random()*canvas.height);
         var radius = Math.floor(Math.random()*Math.min(canvas.width, canvas.height)/20);
-
+        
         var r = Math.floor(Math.random()*255);
         var g = Math.floor(Math.random()*255);
         var b = Math.floor(Math.random()*255);
@@ -33,7 +34,7 @@ function generateCircle(canvas)
         ctx.closePath();
     }
     //restore context
-	ctx.restore();
+    ctx.restore();
 }
 
 //--------------------------------------------------
@@ -56,7 +57,7 @@ function generateRainbow(canvas)
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     //restore context
-	ctx.restore();
+    ctx.restore();
 }
 
 //----Randomize array in-place using Durstenfeld shuffle algorithm
@@ -67,4 +68,18 @@ function shuffleArray(array) {
         array[i] = array[j];
         array[j] = temp;
     }
+}
+
+//--------------------------------------------------
+function generateSolid(canvas)
+{
+    // canvas
+    var ctx=canvas.getContext("2d");
+    // save context
+    ctx.save();
+    // initialize canvas in black
+    ctx.fillStyle = "#" + Math.floor(Math.random()*16777215).toString(16);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    //restore context
+    ctx.restore();
 }

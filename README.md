@@ -24,7 +24,7 @@ ImagePainting3 is project of a lightPainting device aiming to be powerfull but y
 
 ![README02](images/readme02.png?raw=true "readme02")
 
-After a simple [electronic wiring](https://github.com/jbreizh/Imagepainting3/wiki/electronic-wiring), adapting the [ESP8266 code](https://github.com/jbreizh/Imagepainting3/wiki/ESP8266-code) and finally following the [flash instruction](https://github.com/jbreizh/Imagepainting3/wiki/Flash-instruction), you will have a lightPainting device that you can control with your [smartphone](https://github.com/jbreizh/Imagepainting3/wiki/User-Manual) to shoot [great picture](https://github.com/jbreizh/Imagepainting3/wiki/examples).
+After a simple [electronic build](https://github.com/jbreizh/ImagePainting3/wiki/Build-electronic), adapting the [ESP8266 code](https://github.com/jbreizh/ImagePainting3/wiki/Backend-code) and finally following the [flash instruction](https://github.com/jbreizh/Imagepainting3/wiki/Flash-instruction), you will have a lightPainting device that you can control with your [smartphone](https://github.com/jbreizh/ImagePainting3/wiki/Frontend-Manual) to shoot [great picture](https://github.com/jbreizh/Imagepainting3/wiki/examples).
 
 ## Documentation
 
