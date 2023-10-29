@@ -3,8 +3,10 @@
 //#define CORS      // Decomment this to support CORS
 //#define DEBUG     // Decomment this to print some debug indication
 #define BUTTON    // Decomment this to use BUTTON
-#define FEATURE DotStarBgrFeature // Neopixels : NeoGrbFeature / Dotstars : DotStarBgrFeature
-#define METHOD DotStarSpiMethod // Neopixels :Neo800KbpsMethod / Dotstars : DotStarSpiMethod
+#define FEATURE DotStarBgrFeature // Dotstars
+#define METHOD DotStarSpiMethod // Dotstars
+//#define FEATURE NeoGrbFeature // Neopixels
+//#define METHOD Neo800KbpsMethod // Neopixels
 //Dotstars : DATA_PIN : MOSI / CLOCK_PIN :SCK (Wemos D1 mini DATA_PIN=D7(GREEN) CLOCK_PIN=D5 (Yellow))
 //Neopixels : DATA_PIN : RDX0/GPIO3 (Wemos D1 mini DATA_PIN=RX)
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -69,11 +71,12 @@ struct t_parameter
   uint8_t hcut;
   bool ishcutoff;
   bool ishcutcolor;
+  bool isalternate;
   bool isendoff;
   bool isendcolor;
 };
 t_parameter PARAMETER; // Hold parameter
-const t_parameter PARAMETERDEFAULT = {"",0,0,0,50,false,15,25,false,HtmlColor(0xffffff),1,false,false,1,false,false,1,false,false,true,false}; // default parameter value (can be edit)
+const t_parameter PARAMETERDEFAULT = {"",0,0,0,50,false,15,25,false,HtmlColor(0xffffff),1,false,false,1,false,false,1,false,false,false,true,false}; // default parameter value (can be edit)
 // end PARAMETER --------------
 
 // PLAYLIST --------------
@@ -136,39 +139,20 @@ template<typename T_COLOR_OBJECT> class BrightnessShader : public NeoShaderBase
       T_COLOR_OBJECT result;
       T_COLOR_OBJECT color;
       
-      // Horizontal cut counter initialization
-      if (index == 0) HCUTCOUNTER = 2 * PARAMETERTEMP.hcut;
-      
-      // Horizontal cut to do
-      if ((PARAMETERTEMP.ishcutoff || PARAMETERTEMP.ishcutcolor) && (HCUTCOUNTER <= PARAMETERTEMP.hcut))
-      {
-        // Horizontal cut counter incrementation
-        if (HCUTCOUNTER > 1) HCUTCOUNTER -= 1;
-        else HCUTCOUNTER = 2 * PARAMETERTEMP.hcut;
+      // Horizontal cut counter incrementation
+      if (HCUTCOUNTER > 1) HCUTCOUNTER -= 1;
+      else HCUTCOUNTER = 2*PARAMETERTEMP.hcut;
         
-        //  Blank or color the strip during the horizontal cut
-        color= RgbColor(0,0,0);
-        if (PARAMETERTEMP.ishcutcolor)  color = RgbColor(PARAMETERTEMP.color);
-      }
-      
-      // No horizontal cut to do
-      else
-      {
-        // Horizontal cut counter incrementation
-        if (PARAMETERTEMP.ishcutoff || PARAMETERTEMP.ishcutcolor) HCUTCOUNTER -= 1;
-        
-        // Fil the strip with the bitmap
-        color = src;
-      }
-      
+      //  Blank or color the strip during the horizontal cut
+      if (PARAMETERTEMP.ishcutoff && HCUTCOUNTER <= PARAMETERTEMP.hcut) color= HtmlColor(0);
+      else if (PARAMETERTEMP.ishcutcolor && HCUTCOUNTER <= PARAMETERTEMP.hcut) color = PARAMETERTEMP.color;
+      else color = src;
+    
       // below is a fast way to apply brightness to all elements (only 8bits) of the color
       const uint8_t* pColor = reinterpret_cast<const uint8_t*>(&color);
       uint8_t* pResult = reinterpret_cast<uint8_t*>(&result);
       const uint8_t* pColorEnd = pColor + sizeof(T_COLOR_OBJECT);
-      while (pColor != pColorEnd)
-      {
-        *pResult++ = (*pColor++ * (uint16_t(PARAMETERTEMP.brightness) + 1)) >> 8;
-      }
+      while (pColor != pColorEnd) *pResult++ = (*pColor++ * (uint16_t(PARAMETERTEMP.brightness) + 1)) >> 8;
       
       //
       return result;
@@ -290,7 +274,7 @@ void setup()
 
   // LED setup
   STRIP.Begin();
-  STRIP.ClearTo(RgbColor(0, 0, 0));
+  STRIP.ClearTo(HtmlColor(0));
 
   // Parameter initialization
   parameterDefault(PARAMETER);
@@ -365,15 +349,6 @@ void loop()
     ISBTNBHOLD = false;
   }
 #endif
-}
-//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-void clearToSHADER()
-{
-  for (uint16_t index=0; index<NUMPIXELS; index++)
-   {
-     // Apply color through SHADER to each pixel of the strip
-     STRIP.SetPixelColor(index,SHADER.Apply(index, PARAMETERTEMP.color));
-   }
 }
 
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -736,6 +711,7 @@ void parameterTojsonObject(t_parameter &parameter, JsonObject &jsonObject)
   jsonObject["hc"] = parameter.hcut;
   jsonObject["ihco"] = parameter.ishcutoff;
   jsonObject["ihcc"] = parameter.ishcutcolor;
+  jsonObject["ialt"] = parameter.isalternate;
   //
   jsonObject["iedo"] = parameter.isendoff;
   jsonObject["iedc"] = parameter.isendcolor;
@@ -826,6 +802,7 @@ void jsonObjectToparameter(JsonObject &jsonObject, t_parameter &parameter)
   if (!jsonObject["hc"].isNull()) parameter.hcut = jsonObject["hc"];
   if (!jsonObject["ihco"].isNull()) parameter.ishcutoff = jsonObject["ihco"];
   if (!jsonObject["ihcc"].isNull()) parameter.ishcutcolor = jsonObject["ihcc"];
+  if (!jsonObject["ialt"].isNull()) parameter.isalternate = jsonObject["ialt"];
   //
   if (!jsonObject["iedo"].isNull()) parameter.isendoff = jsonObject["iedo"];
   if (!jsonObject["iedc"].isNull()) parameter.isendcolor = jsonObject["iedc"];
@@ -1125,6 +1102,26 @@ void handleSystemRead()
 }
 
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+void clearToSHADER(HtmlColor color, uint8_t hcutcounter)
+{
+  // 
+  HCUTCOUNTER = hcutcounter;
+  
+  // Apply color through SHADER to each pixel of the strip
+  for (uint16_t index=0; index<NUMPIXELS; index++) STRIP.SetPixelColor(index,SHADER.Apply(index, color));
+}
+
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+void renderSHADER(uint16_t index, uint8_t hcutcounter)
+{
+  // 
+  HCUTCOUNTER = hcutcounter;
+  
+  // Apply bitmap at index through SHADER to each pixel of the strip
+  NEOBMPFILE.Render<BrightShader>(STRIP, SHADER, 0, 0, index, NEOBMPFILE.Width());
+}
+
+//XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 t_httpAnswer playAnimation()
 {
   // New httpAnswer
@@ -1150,8 +1147,8 @@ t_httpAnswer playAnimation()
     ANIMATIONS.Pause();
 
     // Blank the strip if needed
-    if (PARAMETERTEMP.isendoff) STRIP.ClearTo(RgbColor(0, 0, 0));
-    if (PARAMETERTEMP.isendcolor) clearToSHADER();
+    if (PARAMETERTEMP.isendoff) STRIP.ClearTo(HtmlColor(0));
+    if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
 
     // Build httpAnswer and return it
     httpAnswer.statusCode = 200;
@@ -1200,7 +1197,7 @@ t_httpAnswer playAnimation()
   WAITCOUNTER = PARAMETERTEMP.wait;
   
   // Vertical cut counter initialization
-  VCUTCOUNTER = 2 * PARAMETERTEMP.vcut;
+  VCUTCOUNTER = 2*PARAMETERTEMP.vcut;
   
   // Index initialization
   if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
@@ -1238,7 +1235,7 @@ t_httpAnswer stopAnimation(String action)
   ANIMATIONS.Resume(); // remove the pause flag to stop paused animation
 
   // Turn the strip to blank
-  if (action == "STOP") STRIP.ClearTo(RgbColor(0, 0, 0));
+  if (action == "STOP") STRIP.ClearTo(HtmlColor(0));
 
   // Turn the strip to COLOR
   if (action == "LIGHT")
@@ -1263,7 +1260,7 @@ t_httpAnswer stopAnimation(String action)
     }
     
     // Render the color from PARAMETERTEMP
-    clearToSHADER();
+    clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
   }
 
   // Turn the strip to the first column of BITMAP
@@ -1299,8 +1296,8 @@ t_httpAnswer stopAnimation(String action)
     }
     
     // Render the first(normal) or the last(invert) line of bmp from PARAMETERTEMP
-    if (PARAMETERTEMP.isinvert) NEOBMPFILE.Render<BrightShader>(STRIP, SHADER, 0, 0, PARAMETERTEMP.indexstop, NEOBMPFILE.Width());
-    else NEOBMPFILE.Render<BrightShader>(STRIP, SHADER, 0, 0, PARAMETERTEMP.indexstart, NEOBMPFILE.Width());
+    if (PARAMETERTEMP.isinvert) renderSHADER(PARAMETERTEMP.indexstop, 2*PARAMETERTEMP.hcut);
+    else renderSHADER(PARAMETERTEMP.indexstart, 2*PARAMETERTEMP.hcut);
   }
 
   // Build httpAnswer and return it
@@ -1343,131 +1340,123 @@ void updateAnimation(const AnimationParam & param)
       // Restart the animation
       ANIMATIONS.RestartAnimation(param.index);
 
-      // Vertical cut to do
-      if ((PARAMETERTEMP.isvcutcolor || PARAMETERTEMP.isvcutoff) && (VCUTCOUNTER <= PARAMETERTEMP.vcut))
+      // Vertical cut counter incrementation
+      if (VCUTCOUNTER > 1) VCUTCOUNTER -= 1;
+      else VCUTCOUNTER = 2*PARAMETERTEMP.vcut;
+
+      // Blank or color the strip during the vertical cut
+      if (VCUTCOUNTER <= PARAMETERTEMP.vcut)
       {
-        // Vertical cut counter incrementation
-        if (VCUTCOUNTER > 1) VCUTCOUNTER -= 1;
-        else VCUTCOUNTER = 2 * PARAMETERTEMP.vcut;
-
-        // Blank or color the strip during the vertical cut
-        if (PARAMETERTEMP.isvcutoff) STRIP.ClearTo(RgbColor(0, 0, 0));
-        if (PARAMETERTEMP.isvcutcolor) clearToSHADER();
-
-        // Index incrementation
-        if (PARAMETERTEMP.isinvert) INDEXCOUNTER -= 1;
-        else INDEXCOUNTER += 1;
-      }
-      
-      // No vertical cut to do
-      else
-      {
-        // Vertical cut counter incrementation
-        if (PARAMETERTEMP.isvcutcolor || PARAMETERTEMP.isvcutoff) VCUTCOUNTER -= 1;
-        
-        // Fil the strip with the bitmap (too large bitmap are crop)
-        NEOBMPFILE.Render<BrightShader>(STRIP, SHADER, 0, 0, INDEXCOUNTER, NEOBMPFILE.Width());
-
-        // Index incrementation
-        if (PARAMETERTEMP.isinvert) INDEXCOUNTER -= 1;
-        else INDEXCOUNTER += 1;
-      }
-    }
-    
-    // INDEXCOUNTER is out of the limit
-    else
-    {
-      // Repeat or bounce to do
-      if ((PARAMETERTEMP.isrepeat || PARAMETERTEMP.isbounce) && (REPEATCOUNTER > 0))
-      {
-        // Restart the animation
-        ANIMATIONS.RestartAnimation(param.index);
-
-        // Wait to do
-        if (PARAMETERTEMP.iswait && (WAITCOUNTER > 0))
+        if (PARAMETERTEMP.isvcutoff)
         {
-          // Wait counter incrementation
-          WAITCOUNTER -= 1;
-          
-          // Blank or color the strip during the wait
-          if (PARAMETERTEMP.isendoff) STRIP.ClearTo(RgbColor(0, 0, 0));
-          if (PARAMETERTEMP.isendcolor) clearToSHADER();
+          if (PARAMETERTEMP.isalternate) clearToSHADER(HtmlColor(0), PARAMETERTEMP.hcut); //STRIP.ClearTo(RgbColor(0, 0, 0));
+          else clearToSHADER(HtmlColor(0), 2*PARAMETERTEMP.hcut); //STRIP.ClearTo(RgbColor(0, 0, 0));
         }
-        // No wait to do? so let's repeat
+        else if (PARAMETERTEMP.isvcutcolor)
+        {
+          if (PARAMETERTEMP.isalternate) clearToSHADER(PARAMETERTEMP.color, PARAMETERTEMP.hcut);
+          else clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
+        }
         else
         {
-          // Repeat counter incrementation
-          REPEATCOUNTER -= 1;
-
-          // Wait counter initialization
-          WAITCOUNTER = PARAMETERTEMP.wait;
-          
-          //invert invertTemp to bounce
-          if (PARAMETERTEMP.isbounce) PARAMETERTEMP.isinvert = !PARAMETERTEMP.isinvert;
-  
-          // Index initialization
-          if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
-          else INDEXCOUNTER = PARAMETERTEMP.indexstart;
+          if (PARAMETERTEMP.isalternate) renderSHADER(INDEXCOUNTER, PARAMETERTEMP.hcut);
+          else renderSHADER(INDEXCOUNTER, 2*PARAMETERTEMP.hcut);
         }
       }
-      
-      // Playlist to do
-      else if (ACTION.isplaylist && (PLAYLISTCOUNTER < PLAYLISTSIZE-1))
+      else renderSHADER(INDEXCOUNTER, 2*PARAMETERTEMP.hcut);
+   
+      // Index incrementation
+      if (PARAMETERTEMP.isinvert) INDEXCOUNTER -= 1;
+      else INDEXCOUNTER += 1; 
+    }
+    
+    // Repeat or bounce to do
+    else if ((PARAMETERTEMP.isrepeat || PARAMETERTEMP.isbounce) && (REPEATCOUNTER > 0))
+    {
+      // Restart the animation
+      ANIMATIONS.RestartAnimation(param.index);
+
+      // Wait to do
+      if (PARAMETERTEMP.iswait && (WAITCOUNTER > 0))
       {
-        // Restart the animation
-        ANIMATIONS.RestartAnimation(param.index);
-        
-        // Pause the new animation if playlist trigger by play
-        if (ACTION.istrigger)
-        {
-          ANIMATIONS.Pause();
+        // Wait counter incrementation
+        WAITCOUNTER -= 1;
           
-          // Blank or color the strip during the pause
-          if (PARAMETERTEMP.isendoff) STRIP.ClearTo(RgbColor(0, 0, 0));
-          if (PARAMETERTEMP.isendcolor) clearToSHADER();
-        }
-
-        // Playlist counter incrementation
-        PLAYLISTCOUNTER += 1;
-
-        // Load new parameter from playlist
-        PARAMETERTEMP = PLAYLIST[PLAYLISTCOUNTER];
-
-        // Load new bmp from PARAMETERTEMP
-        NEOBMPFILE.Begin(LittleFS.open(PARAMETERTEMP.bmppath, "r"));
-        
-        // Repeat counter initialization
-        REPEATCOUNTER = PARAMETERTEMP.repeat;
+        // Blank or color the strip during the wait
+        if (PARAMETERTEMP.isendoff) STRIP.ClearTo(HtmlColor(0));
+        if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
+      }
+      // No wait to do? so let's repeat
+      else
+      {
+        // Repeat counter incrementation
+        REPEATCOUNTER -= 1;
 
         // Wait counter initialization
         WAITCOUNTER = PARAMETERTEMP.wait;
-        
-        // Vertical cut counter initialization
-        VCUTCOUNTER = 2 * PARAMETERTEMP.vcut;
-        
+          
+        //invert invertTemp to bounce
+        if (PARAMETERTEMP.isbounce) PARAMETERTEMP.isinvert = !PARAMETERTEMP.isinvert;
+  
         // Index initialization
         if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
         else INDEXCOUNTER = PARAMETERTEMP.indexstart;
-        
-        // Change animation delay
-        ANIMATIONS.ChangeAnimationDuration(0, PARAMETERTEMP.delay);
       }
+    }
       
-      // Nothing more to do
-      else
-      {
-        // Stop the animation
-        ANIMATIONS.StopAnimation(param.index);
+    // Playlist to do
+    else if (ACTION.isplaylist && (PLAYLISTCOUNTER < PLAYLISTSIZE-1))
+    {
+      // Restart the animation
+      ANIMATIONS.RestartAnimation(param.index);
+   
+      // Blank or color the strip if needed
+      if (PARAMETERTEMP.isendoff) STRIP.ClearTo(HtmlColor(0));
+      if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
+
+      // Playlist counter incrementation
+      PLAYLISTCOUNTER += 1;
+
+      // Load new parameter from playlist
+      PARAMETERTEMP = PLAYLIST[PLAYLISTCOUNTER];
+
+      // Load new bmp from PARAMETERTEMP
+      NEOBMPFILE.Begin(LittleFS.open(PARAMETERTEMP.bmppath, "r"));
         
-        // Blank or color the strip if needed
-        if (PARAMETERTEMP.isendoff) STRIP.ClearTo(RgbColor(0, 0, 0));
-        if (PARAMETERTEMP.isendcolor) clearToSHADER();
+      // Repeat counter initialization
+      REPEATCOUNTER = PARAMETERTEMP.repeat;
+
+      // Wait counter initialization
+      WAITCOUNTER = PARAMETERTEMP.wait;
+        
+      // Vertical cut counter initialization
+      VCUTCOUNTER = 2*PARAMETERTEMP.vcut;
+        
+      // Index initialization
+      if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
+      else INDEXCOUNTER = PARAMETERTEMP.indexstart;
+        
+      // Change animation delay
+      ANIMATIONS.ChangeAnimationDuration(0, PARAMETERTEMP.delay);
+
+      // Pause the new animation if playlist trigger by play
+      if (ACTION.istrigger) ANIMATIONS.Pause();
+    }
+      
+    // Nothing more to do
+    else
+    {
+      // Stop the animation
+      ANIMATIONS.StopAnimation(param.index);
+        
+      // Blank or color the strip if needed
+      if (PARAMETERTEMP.isendoff) STRIP.ClearTo(HtmlColor(0));
+      if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
         
 #ifdef DEBUG
-        Serial.print("Animation duration :");
-        Serial.println(millis() - ANIMATIONDURATION);
+      Serial.print("Animation duration :");
+      Serial.println(millis() - ANIMATIONDURATION);
 #endif
-      }
     }
   }
 }

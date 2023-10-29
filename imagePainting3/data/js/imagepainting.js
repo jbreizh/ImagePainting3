@@ -152,6 +152,7 @@ document.addEventListener('init', function(event) {
 		var ckVcutColor = document.getElementById("ckVcutColor");
 		var ckHcutOff = document.getElementById("ckHcutOff");
 		var ckHcutColor = document.getElementById("ckHcutColor");
+		var ckAlternate = document.getElementById("ckAlternate");
 		var ckEndOff = document.getElementById("ckEndOff");
 		var ckEndColor = document.getElementById("ckEndColor");
 		var btnParameterSave = document.getElementById("btnParameterSave");
@@ -241,6 +242,7 @@ document.addEventListener('init', function(event) {
 		ckVcutColor.addEventListener('click', requestParameterWrite, false);
 		ckHcutOff.addEventListener('click', requestParameterWrite, false);
 		ckHcutColor.addEventListener('click', requestParameterWrite, false);
+		ckAlternate.addEventListener('click', requestParameterWrite, false);
 		ckEndColor.addEventListener('click', requestParameterWrite, false);
 		ckEndOff.addEventListener('click', requestParameterWrite, false);
 		btnParameterSave.addEventListener('click', requestParameterSave, false);

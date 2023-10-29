@@ -44,6 +44,7 @@ function setParameter(jsonString) {
 	if (document.getElementById("ckHcutColor") != null) document.getElementById("ckHcutColor").checked = PARAMETER.ihcc;
 	if (document.getElementById("ckHcutOff") != null && document.getElementById("ckHcutColor") != null) updateCheckbox(document.getElementById("ckHcutOff"), document.getElementById("ckHcutColor"));
 	if (document.getElementById("ckHcutColor") != null && document.getElementById("ckHcutOff") != null) updateCheckbox(document.getElementById("ckHcutColor"), document.getElementById("ckHcutOff"));
+	if (document.getElementById("ckAlternate") != null) document.getElementById("ckAlternate").checked = PARAMETER.ialt;
 	if (document.getElementById("pickerColor") != null) document.getElementById("pickerColor").value = PARAMETER.clr;
 	if (document.getElementById("ckEndOff") != null) document.getElementById("ckEndOff").checked = PARAMETER.iedo;
 	if (document.getElementById("ckEndColor") != null) document.getElementById("ckEndColor").checked = PARAMETER.iedc;
@@ -72,6 +73,7 @@ function getParameter() {
 	if (document.getElementById("sliderHcut") != null) PARAMETER.hc = document.getElementById("sliderHcut").value;
 	if (document.getElementById("ckHcutOff") != null) PARAMETER.ihco = document.getElementById("ckHcutOff").checked;
 	if (document.getElementById("ckHcutColor") != null) PARAMETER.ihcc = document.getElementById("ckHcutColor").checked;
+	if (document.getElementById("ckAlternate") != null) PARAMETER.ialt = document.getElementById("ckAlternate").checked;
 	if (document.getElementById("pickerColor") != null) PARAMETER.clr = document.getElementById("pickerColor").value;
 	if (document.getElementById("ckEndOff") != null) PARAMETER.iedo = document.getElementById("ckEndOff").checked;
 	if (document.getElementById("ckEndColor") != null) PARAMETER.iedc = document.getElementById("ckEndColor").checked;
