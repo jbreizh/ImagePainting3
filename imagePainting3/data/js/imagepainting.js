@@ -17,8 +17,8 @@ window.fn.load = function(page) {
 
 // Global Variable
 var address = "";
-//var address = "http://192.168.46.83";
-//var address = "http://192.168.46.55";
+//var address = "http://192.168.167.83";
+//var address = "http://192.168.167.55";
 var ACTION = {};
 var PARAMETER = {};
 var SYSTEM = {};
@@ -136,25 +136,20 @@ document.addEventListener('init', function(event) {
 		var sliderBrightness = document.getElementById("sliderBrightness");
 		var textBrightness = document.getElementById("textBrightness");
 		var ckInvert = document.getElementById("ckInvert");
-		var sliderWait = document.getElementById("sliderWait");
-		var textWait = document.getElementById("textWait");
-		var sliderRepeat = document.getElementById("sliderRepeat");
-		var textRepeat = document.getElementById("textRepeat");
+		var pickerEndColor = document.getElementById("pickerEndColor");
+		var ckEndOff = document.getElementById("ckEndOff");
+		var ckEndColor = document.getElementById("ckEndColor");
+		var pickerCutColor = document.getElementById("pickerCutColor");
 		var sliderVcut = document.getElementById("sliderVcut");
 		var textVcut = document.getElementById("textVcut");
 		var sliderHcut = document.getElementById("sliderHcut");
 		var textHcut = document.getElementById("textHcut");
-		var pickerColor = document.getElementById("pickerColor");
-		var ckWait = document.getElementById("ckWait");
-		var ckRepeat = document.getElementById("ckRepeat");
-		var ckBounce = document.getElementById("ckBounce");
-		var ckVcutOff = document.getElementById("ckVcutOff");
-		var ckVcutColor = document.getElementById("ckVcutColor");
-		var ckHcutOff = document.getElementById("ckHcutOff");
-		var ckHcutColor = document.getElementById("ckHcutColor");
 		var ckAlternate = document.getElementById("ckAlternate");
-		var ckEndOff = document.getElementById("ckEndOff");
-		var ckEndColor = document.getElementById("ckEndColor");
+		var sliderRepeat = document.getElementById("sliderRepeat");
+		var textRepeat = document.getElementById("textRepeat");
+		var sliderWait = document.getElementById("sliderWait");
+		var textWait = document.getElementById("textWait");
+		var ckBounce = document.getElementById("ckBounce");
 		var btnParameterSave = document.getElementById("btnParameterSave");
 		var btnParameterRestore = document.getElementById("btnParameterRestore");
 		var btnParameterDefault = document.getElementById("btnParameterDefault");
@@ -209,39 +204,16 @@ document.addEventListener('init', function(event) {
 		sliderRepeat.addEventListener('change', requestParameterWrite, false);
 		sliderVcut.addEventListener('change', requestParameterWrite, false);
 		sliderHcut.addEventListener('change', requestParameterWrite, false);
-		pickerColor.addEventListener('change', requestParameterWrite, false);
-		ckRepeat.addEventListener('click', function() {
-			updateCheckbox(ckRepeat, ckBounce);
-		}, false);
-		ckBounce.addEventListener('click', function() {
-			updateCheckbox(ckBounce, ckRepeat);
-		}, false);
-		ckVcutOff.addEventListener('click', function() {
-			updateCheckbox(ckVcutOff, ckVcutColor);
-		}, false);
-		ckVcutColor.addEventListener('click', function() {
-			updateCheckbox(ckVcutColor, ckVcutOff);
-		}, false);
-		ckHcutOff.addEventListener('click', function() {
-			updateCheckbox(ckHcutOff, ckHcutColor);
-		}, false);
-		ckHcutColor.addEventListener('click', function() {
-			updateCheckbox(ckHcutColor, ckHcutOff);
-		}, false);
+		pickerEndColor.addEventListener('change', requestParameterWrite, false);
+		pickerCutColor.addEventListener('change', requestParameterWrite, false);
 		ckEndColor.addEventListener('click', function() {
 			updateCheckbox(ckEndColor, ckEndOff);
 		}, false);
 		ckEndOff.addEventListener('click', function() {
 			updateCheckbox(ckEndOff, ckEndColor);
 		}, false);
-		ckWait.addEventListener('click', requestParameterWrite, false);
 		ckInvert.addEventListener('click', requestParameterWrite, false);
-		ckRepeat.addEventListener('click', requestParameterWrite, false);
 		ckBounce.addEventListener('click', requestParameterWrite, false);
-		ckVcutOff.addEventListener('click', requestParameterWrite, false);
-		ckVcutColor.addEventListener('click', requestParameterWrite, false);
-		ckHcutOff.addEventListener('click', requestParameterWrite, false);
-		ckHcutColor.addEventListener('click', requestParameterWrite, false);
 		ckAlternate.addEventListener('click', requestParameterWrite, false);
 		ckEndColor.addEventListener('click', requestParameterWrite, false);
 		ckEndOff.addEventListener('click', requestParameterWrite, false);

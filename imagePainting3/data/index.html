@@ -164,10 +164,6 @@
 								<div class="right" id="textBrightness"></div>
 							</ons-list-item>
 							<ons-list-item modifier="nodivider">
-								<div class="left">Color:</div>
-								<div class="center"><ons-input style="width: 100%;" type="color" id="pickerColor"></ons-input></div>
-							</ons-list-item>
-							<ons-list-item modifier="nodivider">
 									<div class="left">Invert?</div>
 									<div class="right"><ons-checkbox id="ckInvert"></ons-checkbox></div>
 							</ons-list-item>
@@ -178,6 +174,10 @@
 					END
 					<div class="expandable-content">
 						<ons-list modifier="inset">
+							<ons-list-item modifier="nodivider">
+								<div class="left">End Color:</div>
+								<div class="center"><ons-input style="width: 100%;" type="color" id="pickerEndColor"></ons-input></div>
+							</ons-list-item>
 							<ons-list-item modifier="nodivider">
 								<div class="left">End Off?</div>
 								<div class="right"><ons-checkbox id="ckEndOff"></ons-checkbox></div>
@@ -194,30 +194,18 @@
 					<div class="expandable-content">
 						<ons-list modifier="inset">
 							<ons-list-item modifier="nodivider">
+								<div class="left">Cut Color:</div>
+								<div class="center"><ons-input style="width: 100%;" type="color" id="pickerCutColor"></ons-input></div>
+							</ons-list-item>
+							<ons-list-item modifier="nodivider">
 								<div class="left">Vertical Cut:</div>
 								<div class="center"><ons-range style="width: 100%;" min="0" max="25" id="sliderVcut"></ons-range></div>
 								<div class="right" id="textVcut"></div>
 							</ons-list-item>
 							<ons-list-item modifier="nodivider">
-								<div class="left">Vertical Cut Off?</div>
-								<div class="right"><ons-checkbox id="ckVcutOff"></ons-checkbox></div>
-							</ons-list-item>
-							<ons-list-item modifier="nodivider">
-								<div class="left">Vertical Cut Color?</div>
-								<div class="right"><ons-checkbox id="ckVcutColor"></ons-checkbox></div>
-							</ons-list-item>
-							<ons-list-item modifier="nodivider">
 								<div class="left">Horizontal Cut:</div>
 								<div class="center"><ons-range style="width: 100%;" min="0" max="25" id="sliderHcut"></ons-range></div>
 								<div class="right" id="textHcut"></div>
-							</ons-list-item>
-							<ons-list-item modifier="nodivider">
-								<div class="left">Horizontal Cut Off?</div>
-								<div class="right"><ons-checkbox id="ckHcutOff"></ons-checkbox></div>
-							</ons-list-item>
-							<ons-list-item modifier="nodivider">
-								<div class="left">Horizontal Cut Color?</div>
-								<div class="right"><ons-checkbox id="ckHcutColor"></ons-checkbox></div>
 							</ons-list-item>
 							<ons-list-item modifier="nodivider">
 								<div class="left">Alternate?</div>
@@ -236,21 +224,13 @@
 								<div class="right" id="textRepeat"></div>
 							</ons-list-item>
 							<ons-list-item modifier="nodivider">
-								<div class="left">Repeat?</div>
-								<div class="right"><ons-checkbox id="ckRepeat"></ons-checkbox></div>
-							</ons-list-item>
-							<ons-list-item modifier="nodivider">
-								<div class="left">Bounce?</div>
-								<div class="right"><ons-checkbox id="ckBounce"></ons-checkbox></div>
-							</ons-list-item>
-							<ons-list-item modifier="nodivider">
 								<div class="left">Wait:</div>
 								<div class="center"><ons-range style="width: 100%;" min="0" max="200" id="sliderWait"></ons-range></div>
 								<div class="right" id="textWait"></div>
 							</ons-list-item>
 							<ons-list-item modifier="nodivider">
-								<div class="left">Wait?</div>
-								<div class="right"><ons-checkbox id="ckWait"></ons-checkbox></div>
+								<div class="left">Bounce?</div>
+								<div class="right"><ons-checkbox id="ckBounce"></ons-checkbox></div>
 							</ons-list-item>
 						</ons-list>
 					</div>

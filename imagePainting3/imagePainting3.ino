@@ -3,12 +3,10 @@
 //#define CORS      // Decomment this to support CORS
 //#define DEBUG     // Decomment this to print some debug indication
 #define BUTTON    // Decomment this to use BUTTON
-#define FEATURE DotStarBgrFeature // Dotstars
+#define FEATURE DotStarBgrFeature // Dotstars : DATA_PIN : MOSI / CLOCK_PIN :SCK (Wemos D1 mini DATA_PIN=D7(GREEN) CLOCK_PIN=D5 (Yellow))
 #define METHOD DotStarSpiMethod // Dotstars
-//#define FEATURE NeoGrbFeature // Neopixels
+//#define FEATURE NeoGrbFeature // Neopixels : DATA_PIN : RDX0/GPIO3 (Wemos D1 mini DATA_PIN=RX)
 //#define METHOD Neo800KbpsMethod // Neopixels
-//Dotstars : DATA_PIN : MOSI / CLOCK_PIN :SCK (Wemos D1 mini DATA_PIN=D7(GREEN) CLOCK_PIN=D5 (Yellow))
-//Neopixels : DATA_PIN : RDX0/GPIO3 (Wemos D1 mini DATA_PIN=RX)
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 #include <ArduinoJson.h>
@@ -56,27 +54,22 @@ struct t_parameter
   uint16_t indexstart;
   uint16_t indexstop;
   uint16_t indexmax;
-  uint16_t wait;
-  bool iswait;
   uint8_t delay;
   uint8_t brightness;
   bool isinvert;
-  HtmlColor color;
-  uint8_t repeat;
-  bool isrepeat;
-  bool isbounce;
-  uint8_t vcut;
-  bool isvcutoff;
-  bool isvcutcolor;
-  uint8_t hcut;
-  bool ishcutoff;
-  bool ishcutcolor;
-  bool isalternate;
+  HtmlColor endcolor;
   bool isendoff;
   bool isendcolor;
+  HtmlColor cutcolor;
+  uint8_t vcut;
+  uint8_t hcut;
+  bool isalternate;
+  uint8_t repeat;
+  uint16_t wait;
+  bool isbounce;
 };
 t_parameter PARAMETER; // Hold parameter
-const t_parameter PARAMETERDEFAULT = {"",0,0,0,50,false,15,25,false,HtmlColor(0xffffff),1,false,false,1,false,false,1,false,false,false,true,false}; // default parameter value (can be edit)
+const t_parameter PARAMETERDEFAULT = {"",0,0,0,15,25,false,HtmlColor(0xffffff),true,false,HtmlColor(0),0,0,false,0,0,false}; // default parameter value (can be edit)
 // end PARAMETER --------------
 
 // PLAYLIST --------------
@@ -144,9 +137,8 @@ template<typename T_COLOR_OBJECT> class BrightnessShader : public NeoShaderBase
       else HCUTCOUNTER = 2*PARAMETERTEMP.hcut;
         
       //  Blank or color the strip during the horizontal cut
-      if (PARAMETERTEMP.ishcutoff && HCUTCOUNTER <= PARAMETERTEMP.hcut) color= HtmlColor(0);
-      else if (PARAMETERTEMP.ishcutcolor && HCUTCOUNTER <= PARAMETERTEMP.hcut) color = PARAMETERTEMP.color;
-      else color = src;
+      if (HCUTCOUNTER <= PARAMETERTEMP.hcut) color = src;
+      else color = PARAMETERTEMP.cutcolor;
     
       // below is a fast way to apply brightness to all elements (only 8bits) of the color
       const uint8_t* pColor = reinterpret_cast<const uint8_t*>(&color);
@@ -693,28 +685,23 @@ void parameterTojsonObject(t_parameter &parameter, JsonObject &jsonObject)
   jsonObject["dly"] = parameter.delay;
   jsonObject["bts"] = parameter.brightness;
   jsonObject["iivt"] = parameter.isinvert;
-  char color[9];
-  parameter.color.ToNumericalString(color, 9);
-  jsonObject["clr"] = color;
   //
-  jsonObject["wt"] = parameter.wait;
-  jsonObject["iwt"] = parameter.iswait;
-  //
-  jsonObject["rpt"] = parameter.repeat;
-  jsonObject["irpt"] = parameter.isrepeat;
-  jsonObject["ibnc"] = parameter.isbounce;
-  //
-  jsonObject["vc"] = parameter.vcut;
-  jsonObject["ivco"] = parameter.isvcutoff;
-  jsonObject["ivcc"] = parameter.isvcutcolor;
-  //
-  jsonObject["hc"] = parameter.hcut;
-  jsonObject["ihco"] = parameter.ishcutoff;
-  jsonObject["ihcc"] = parameter.ishcutcolor;
-  jsonObject["ialt"] = parameter.isalternate;
-  //
+  char endcolor[9];
+  parameter.endcolor.ToNumericalString(endcolor, 9);
+  jsonObject["eclr"] = endcolor;
   jsonObject["iedo"] = parameter.isendoff;
   jsonObject["iedc"] = parameter.isendcolor;
+  //
+  char cutcolor[9];
+  parameter.cutcolor.ToNumericalString(cutcolor, 9);
+  jsonObject["cclr"] = cutcolor;
+  jsonObject["vc"] = parameter.vcut;
+  jsonObject["hc"] = parameter.hcut;
+  jsonObject["ialt"] = parameter.isalternate;
+  //
+  jsonObject["rpt"] = parameter.repeat;
+  jsonObject["wt"] = parameter.wait;
+  jsonObject["ibnc"] = parameter.isbounce;
 }
 
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -786,26 +773,19 @@ void jsonObjectToparameter(JsonObject &jsonObject, t_parameter &parameter)
   if (!jsonObject["dly"].isNull()) parameter.delay = jsonObject["dly"];
   if (!jsonObject["bts"].isNull()) parameter.brightness = jsonObject["bts"];
   if (!jsonObject["iivt"].isNull()) parameter.isinvert = jsonObject["iivt"];
-  if (!jsonObject["clr"].isNull()) parameter.color.Parse<HtmlShortColorNames>(jsonObject["clr"].as<String>());
   //
-  if (!jsonObject["wt"].isNull()) parameter.wait = jsonObject["wt"];
-  if (!jsonObject["iwt"].isNull()) parameter.iswait = jsonObject["iwt"];
-  //
-  if (!jsonObject["rpt"].isNull()) parameter.repeat = jsonObject["rpt"];
-  if (!jsonObject["irpt"].isNull()) parameter.isrepeat = jsonObject["irpt"];
-  if (!jsonObject["ibnc"].isNull()) parameter.isbounce = jsonObject["ibnc"];
-  //
-  if (!jsonObject["vc"].isNull()) parameter.vcut = jsonObject["vc"];
-  if (!jsonObject["ivco"].isNull()) parameter.isvcutoff = jsonObject["ivco"];
-  if (!jsonObject["ivcc"].isNull()) parameter.isvcutcolor = jsonObject["ivcc"];
-  //
-  if (!jsonObject["hc"].isNull()) parameter.hcut = jsonObject["hc"];
-  if (!jsonObject["ihco"].isNull()) parameter.ishcutoff = jsonObject["ihco"];
-  if (!jsonObject["ihcc"].isNull()) parameter.ishcutcolor = jsonObject["ihcc"];
-  if (!jsonObject["ialt"].isNull()) parameter.isalternate = jsonObject["ialt"];
-  //
+  if (!jsonObject["eclr"].isNull()) parameter.endcolor.Parse<HtmlShortColorNames>(jsonObject["eclr"].as<String>());
   if (!jsonObject["iedo"].isNull()) parameter.isendoff = jsonObject["iedo"];
   if (!jsonObject["iedc"].isNull()) parameter.isendcolor = jsonObject["iedc"];
+  //
+  if (!jsonObject["cclr"].isNull()) parameter.cutcolor.Parse<HtmlShortColorNames>(jsonObject["cclr"].as<String>());
+  if (!jsonObject["vc"].isNull()) parameter.vcut = jsonObject["vc"];
+  if (!jsonObject["hc"].isNull()) parameter.hcut = jsonObject["hc"];
+  if (!jsonObject["ialt"].isNull()) parameter.isalternate = jsonObject["ialt"];
+  //
+  if (!jsonObject["rpt"].isNull()) parameter.repeat = jsonObject["rpt"];
+  if (!jsonObject["wt"].isNull()) parameter.wait = jsonObject["wt"];
+  if (!jsonObject["ibnc"].isNull()) parameter.isbounce = jsonObject["ibnc"];
 }
 
 //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -1148,7 +1128,7 @@ t_httpAnswer playAnimation()
 
     // Blank the strip if needed
     if (PARAMETERTEMP.isendoff) STRIP.ClearTo(HtmlColor(0));
-    if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
+    if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.endcolor, PARAMETERTEMP.hcut);
 
     // Build httpAnswer and return it
     httpAnswer.statusCode = 200;
@@ -1197,7 +1177,7 @@ t_httpAnswer playAnimation()
   WAITCOUNTER = PARAMETERTEMP.wait;
   
   // Vertical cut counter initialization
-  VCUTCOUNTER = 2*PARAMETERTEMP.vcut;
+  VCUTCOUNTER = PARAMETERTEMP.vcut;
   
   // Index initialization
   if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
@@ -1260,7 +1240,7 @@ t_httpAnswer stopAnimation(String action)
     }
     
     // Render the color from PARAMETERTEMP
-    clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
+    clearToSHADER(PARAMETERTEMP.endcolor, PARAMETERTEMP.hcut);
   }
 
   // Turn the strip to the first column of BITMAP
@@ -1296,8 +1276,8 @@ t_httpAnswer stopAnimation(String action)
     }
     
     // Render the first(normal) or the last(invert) line of bmp from PARAMETERTEMP
-    if (PARAMETERTEMP.isinvert) renderSHADER(PARAMETERTEMP.indexstop, 2*PARAMETERTEMP.hcut);
-    else renderSHADER(PARAMETERTEMP.indexstart, 2*PARAMETERTEMP.hcut);
+    if (PARAMETERTEMP.isinvert) renderSHADER(PARAMETERTEMP.indexstop, PARAMETERTEMP.hcut);
+    else renderSHADER(PARAMETERTEMP.indexstart, PARAMETERTEMP.hcut);
   }
 
   // Build httpAnswer and return it
@@ -1345,46 +1325,30 @@ void updateAnimation(const AnimationParam & param)
       else VCUTCOUNTER = 2*PARAMETERTEMP.vcut;
 
       // Blank or color the strip during the vertical cut
-      if (VCUTCOUNTER <= PARAMETERTEMP.vcut)
-      {
-        if (PARAMETERTEMP.isvcutoff)
-        {
-          if (PARAMETERTEMP.isalternate) clearToSHADER(HtmlColor(0), PARAMETERTEMP.hcut); //STRIP.ClearTo(RgbColor(0, 0, 0));
-          else clearToSHADER(HtmlColor(0), 2*PARAMETERTEMP.hcut); //STRIP.ClearTo(RgbColor(0, 0, 0));
-        }
-        else if (PARAMETERTEMP.isvcutcolor)
-        {
-          if (PARAMETERTEMP.isalternate) clearToSHADER(PARAMETERTEMP.color, PARAMETERTEMP.hcut);
-          else clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
-        }
-        else
-        {
-          if (PARAMETERTEMP.isalternate) renderSHADER(INDEXCOUNTER, PARAMETERTEMP.hcut);
-          else renderSHADER(INDEXCOUNTER, 2*PARAMETERTEMP.hcut);
-        }
-      }
-      else renderSHADER(INDEXCOUNTER, 2*PARAMETERTEMP.hcut);
-   
+      if (VCUTCOUNTER <= PARAMETERTEMP.vcut) renderSHADER(INDEXCOUNTER, PARAMETERTEMP.hcut);
+      else if (PARAMETERTEMP.isalternate) renderSHADER(INDEXCOUNTER, 2*PARAMETERTEMP.hcut);
+      else clearToSHADER(PARAMETERTEMP.cutcolor, PARAMETERTEMP.hcut);
+
       // Index incrementation
       if (PARAMETERTEMP.isinvert) INDEXCOUNTER -= 1;
       else INDEXCOUNTER += 1; 
     }
-    
+
     // Repeat or bounce to do
-    else if ((PARAMETERTEMP.isrepeat || PARAMETERTEMP.isbounce) && (REPEATCOUNTER > 0))
+    else if (REPEATCOUNTER > 0)
     {
       // Restart the animation
       ANIMATIONS.RestartAnimation(param.index);
 
       // Wait to do
-      if (PARAMETERTEMP.iswait && (WAITCOUNTER > 0))
+      if (WAITCOUNTER > 0)
       {
         // Wait counter incrementation
         WAITCOUNTER -= 1;
           
         // Blank or color the strip during the wait
         if (PARAMETERTEMP.isendoff) STRIP.ClearTo(HtmlColor(0));
-        if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
+        if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.endcolor, PARAMETERTEMP.hcut);
       }
       // No wait to do? so let's repeat
       else
@@ -1412,7 +1376,7 @@ void updateAnimation(const AnimationParam & param)
    
       // Blank or color the strip if needed
       if (PARAMETERTEMP.isendoff) STRIP.ClearTo(HtmlColor(0));
-      if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
+      if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.endcolor, PARAMETERTEMP.hcut);
 
       // Playlist counter incrementation
       PLAYLISTCOUNTER += 1;
@@ -1430,7 +1394,7 @@ void updateAnimation(const AnimationParam & param)
       WAITCOUNTER = PARAMETERTEMP.wait;
         
       // Vertical cut counter initialization
-      VCUTCOUNTER = 2*PARAMETERTEMP.vcut;
+      VCUTCOUNTER = PARAMETERTEMP.vcut;
         
       // Index initialization
       if (PARAMETERTEMP.isinvert) INDEXCOUNTER = PARAMETERTEMP.indexstop;
@@ -1451,7 +1415,7 @@ void updateAnimation(const AnimationParam & param)
         
       // Blank or color the strip if needed
       if (PARAMETERTEMP.isendoff) STRIP.ClearTo(HtmlColor(0));
-      if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.color, 2*PARAMETERTEMP.hcut);
+      if (PARAMETERTEMP.isendcolor) clearToSHADER(PARAMETERTEMP.endcolor, PARAMETERTEMP.hcut);
         
 #ifdef DEBUG
       Serial.print("Animation duration :");
