@@ -394,7 +394,7 @@ t_httpAnswer actionRead()
   t_httpAnswer httpAnswer;
   
   // New json document
-  StaticJsonDocument<100> jsonDoc;
+  JsonDocument jsonDoc;
 
   //
   jsonDoc["isplaylist"] = ACTION.isplaylist;
@@ -421,7 +421,7 @@ t_httpAnswer actionWrite(String stringAction)
   t_httpAnswer httpAnswer;
   
   // New json document
-  StaticJsonDocument<100> jsonDoc;
+  JsonDocument jsonDoc;
 
   // Convert json String to json doc
   if (deserializeJson(jsonDoc, stringAction))
@@ -468,7 +468,7 @@ t_httpAnswer playlistRead()
   t_httpAnswer httpAnswer;
   
   // New json document
-  DynamicJsonDocument jsonDoc(2500);  //StaticJsonDocument<2500> jsonDoc; can cause stack buffer overflow
+  JsonDocument jsonDoc;
 
   // Write playlist as jsonArray
   JsonArray jsonArrayPlaylist = jsonDoc.to<JsonArray>();
@@ -476,7 +476,7 @@ t_httpAnswer playlistRead()
   for (uint8_t i=0; i<PLAYLISTSIZE; i++)
   {
     // Write each parameter of the playlist as jsonObject in jsonArray
-    JsonObject jsonObjectParameter = jsonArrayPlaylist.createNestedObject();
+    JsonObject jsonObjectParameter = jsonArrayPlaylist.add<JsonObject>();
     
     // Copy parameter to jsonObjectParameter
     parameterTojsonObject(PLAYLIST[i],jsonObjectParameter);
@@ -532,13 +532,10 @@ t_httpAnswer playlistWrite(String stringPlaylist)
   t_httpAnswer httpAnswer;
   
   // New json document
-  DynamicJsonDocument jsonDoc(2500); //StaticJsonDocument<2500> jsonDoc; can cause stack buffer overflow
+  JsonDocument jsonDoc;
 
-  // Convert json String to json object
-  DeserializationError error = deserializeJson(jsonDoc, stringPlaylist);
-
-  // Json not right ?
-  if (error)
+  // Convert json String to json doc
+  if (deserializeJson(jsonDoc, stringPlaylist))
   {
     // Build httpAnswer and return it
     httpAnswer.statusCode = 500;
@@ -711,7 +708,7 @@ t_httpAnswer parameterRead()
   t_httpAnswer httpAnswer;
   
   // New json document
-  StaticJsonDocument<1000> jsonDoc;
+  JsonDocument jsonDoc;
 
   // Write parameter as jsonObject
   JsonObject jsonObjectParameter = jsonDoc.to<JsonObject>();
@@ -795,13 +792,10 @@ t_httpAnswer parameterWrite(String stringParameter)
   t_httpAnswer httpAnswer;
   
   // New json document
-  StaticJsonDocument<1000> jsonDoc;
-
-  // Convert json String to json object
-  DeserializationError error = deserializeJson(jsonDoc, stringParameter);
+  JsonDocument jsonDoc;
 
   // Json not right : throw error
-  if (error)
+  if (deserializeJson(jsonDoc, stringParameter))
   {
     // Build httpAnswer and return it
     httpAnswer.statusCode = 500;
@@ -1041,14 +1035,14 @@ t_httpAnswer systemRead()
   fs::Dir dir = LittleFS.openDir("/");
 
   // New json document
-  DynamicJsonDocument jsonDoc(2500); //StaticJsonDocument<2500> jsonDoc; can cause stack buffer overflow
+  JsonDocument jsonDoc;
   
   // Store ledInfo in json nested object
-  JsonObject ledInfo  = jsonDoc.createNestedObject("ldi");
+  JsonObject ledInfo = jsonDoc["ldi"].to<JsonObject>();
   ledInfo["pxs"] = NUMPIXELS;
 
   // Store fsInfo in json nested object
-  JsonObject fsInfo  = jsonDoc.createNestedObject("fsi");
+  JsonObject fsInfo = jsonDoc["fsi"].to<JsonObject>();
   FSInfo fs_info;
   LittleFS.info(fs_info);
   fsInfo["ubs"] = fs_info.usedBytes;
@@ -1056,13 +1050,13 @@ t_httpAnswer systemRead()
   fsInfo["fbs"] = fs_info.totalBytes-fs_info.usedBytes;
 
   // Store fileList in json nested object
-  JsonObject fileList = jsonDoc.createNestedObject("flt");
+  JsonObject fileList = jsonDoc["flt"].to<JsonObject>();
   while (dir.next())
   {
     if(dir.isFile())
     {
       // store file parameter in json nested object
-      JsonObject file  = fileList.createNestedObject(dir.fileName());
+      JsonObject file  = fileList[dir.fileName()].to<JsonObject>();
       file["fsz"] = dir.fileSize();
     }
   }

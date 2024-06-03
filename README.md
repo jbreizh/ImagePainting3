@@ -4,7 +4,7 @@
 
 New version of [ImagePainting2](https://github.com/jbreizh/imagePainting2) which was a new version of [ImagePainting](https://github.com/jbreizh/ImagePainting).... 
 
-Luckily this version will be the ultimate ImagePainting (no more major feature/breakage) to end this madness as i considere it feature complete.
+Luckily this version will be the ultimate version of ImagePainting (no more major feature/breakage).
 
 ![README01](images/readme01.png?raw=true "readme01")
 
